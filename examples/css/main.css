@@ -1,0 +1,186 @@
+* {
+	margin: 0px;
+	padding: 0px;
+	font-family: Verdana; 
+	font-size: 12px; 
+  border: 0px solid black;
+}
+
+li {
+  list-style-type: none;
+  min-height:18px;
+  padding:1px;
+}
+
+p { 
+	clear: both; 
+}
+
+em { 
+	font-weight: bold; 
+	padding-right: 1em; 
+	vertical-align: top; 
+}
+
+img {
+	border: 0;
+}
+
+a:link {
+	color: #FF0000;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+a:visited {
+	color: #FF0000;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+a:hover {
+	color: #FFAA00;
+}
+
+
+body {
+        font-family: Helvetica,Arial,sans-serif;
+        font-size: 14px;
+        background-color: #FFF;
+        text-align: left;
+        -moz-background-clip:border;
+        -moz-background-inline-policy:continuous;
+        -moz-background-origin:padding;
+        -x-system-font:none;
+        color:#000;
+}
+
+.shadow {
+        -moz-box-shadow: 3px 3px 4px #000;
+        -webkit-box-shadow: 3px 3px 4px #000;
+        box-shadow: 3px 3px 4px #000;
+        /* For IE 8 */
+        -ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135, Color='#000000')";
+        /* For IE 5.5 - 7 */
+        filter: progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135, Color='#000000');
+}
+
+#wrapper {
+	width: 1024px;
+  min-height:750px;
+  height: auto;
+	margin-left: auto;
+	margin-right: auto;
+	position: relative;
+ 	background-color: #EEEEEE;
+  border: 1px solid #111111;
+}
+
+#header {
+	width: 100%;
+	height: 50px;
+	padding-top: 10px;
+	background-color: #DDDDDD;
+	position: relative;
+	text-align: center;
+}
+
+#footer {
+	width: 100%;
+	height: 100px;
+	padding-top: 10px;
+	position: relative;
+	background-color: #DDDDDD;
+	text-align: center;
+}
+
+#menu {
+	width: 100%;
+	height: 25px;
+	position: relative;
+	background-color: #DDDDFF;
+	text-align: center;
+}
+
+#content {
+	width: 100%;
+	overflow : auto;
+	min-height:500px;
+}
+
+label { 
+	width: 150px; 
+	float: left; 
+}
+
+label.error { 
+	float: none; 
+	color: red; 
+	padding-left: .5em; 
+	vertical-align: top; 
+}
+
+.rowElem {
+	clear: both;
+}
+
+.exception{
+	clear: all;
+	width: 75%;
+	min-height: 50px;
+	background: #FFEEEE;
+	padding: 10px;
+	border: 2px groove #000000;
+	margin: 10px auto 20px auto;
+	z-index:1000;
+	overflow: auto;
+        -moz-box-shadow: 3px 3px 4px #000;
+        -webkit-box-shadow: 3px 3px 4px #000;
+        box-shadow: 3px 3px 4px #000;
+        /* For IE 8 */
+        -ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135, Color='#000000')";
+        /* For IE 5.5 - 7 */
+        filter: progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135, Color='#000000');
+}
+
+.hand {
+  cursor:pointer;
+}
+
+.fade-right {
+    background: url("/images/fade-sprite.png") no-repeat scroll 0 -54px transparent;
+    height: 25px;
+    left: -25px;
+    position: absolute;
+    top: 0;
+    width: 25px;
+}
+
+.fade-left {
+    background: url("/images/fade-sprite.png") no-repeat scroll 0 0 transparent;
+    height: 25px;
+    position: absolute;
+    right: -17px;
+    top: 0;
+    width: 25px;
+}
+
+.fade-top {
+  background: -moz-linear-gradient(top,    rgba(0,0,0,1), rgba(128,128,128,0));
+  background: -webkit-linear-gradient(top, rgba(0,0,0,1), rgba(128,128,128,0));
+}
+.fade-bottom {
+  background: -moz-linear-gradient(bottom,    rgba(0,0,0,1), rgba(128,128,128,0));
+  background: -webkit-linear-gradient(bottom, rgba(0,0,0,1), rgba(128,128,128,0));
+}
+
+.hidden {
+  display:none;
+}
+
+.hud {
+  position:absolute;
+  z-index:10px;
+  background-color:transparent;
+  color:#FFFFFF;  
+}

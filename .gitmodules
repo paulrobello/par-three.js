@@ -1,0 +1,12 @@
+[submodule "js/three.js"]
+	path = js/three.js
+	url = git://github.com/mrdoob/three.js.git
+[submodule "js/sparks.js"]
+	path = js/sparks.js
+	url = git://github.com/zz85/sparks.js.git
+[submodule "js/gamepad.js"]
+	path = js/gamepad.js
+	url = git://github.com/inequation/gamepad.js.git
+[submodule "js/tween.js"]
+	path = js/tween.js
+	url = https://github.com/sole/tween.js/

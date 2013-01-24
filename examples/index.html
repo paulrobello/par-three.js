@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PAR Three.Js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script src="../js/tween.js/build/tween.min.js"></script>
+<script src="../js/gamepad.js/gamepad.js"></script>
+
+<script src="../js/sparks.js/Sparks.js"></script>
+
+<script src="../js/three.js/build/three.js"></script>
+<script src="../js/three.js/examples/js/libs/stats.min.js"></script>
+
+<script src="../par-three.js"></script>
+<script src="../par-controls.js"></script>
+<script src="../par-ticles.js"></script>
+
+<link type="text/css" href="css/main.css" rel="stylesheet" />
+  
+<style>
+body {
+  overflow:hidden;
+  font-family: Monospace;
+}
+canvas { 
+  border: 0px solid black;
+  background-color: #000;
+  z-index:1;
+}
+
+#gamepads-container {
+  top:5px;
+  left:5px; 
+}
+#help-container {
+  top:600px;
+  left:5px;
+}
+</style>
+
+</head>
+
+<body>
+<div id="render-container"></div>
+<div id="stats-container"></div>
+<div id="help-container" class="hud">
+Movement:<Br>
+WS=forward / backwards,AD=left / right, RF=up / down, or  Left stick<br>
+Look: Mouse Left Drag or Right stick<br>
+</div>
+<div id="sprite-container"></div>
+<div id="gamepads-container" class="hud">
+<ul id="gamepads"></ul>
+</div>
+<script>
+var p;
+var dummy,plane,cube;
+$(document).ready(function() {
+    init();
+    animate();
+
+    function init() {
+    	p=new P();
+	var scene = p.scene;    
+        var camera = p.camera;
+
+	
+	p.addAmbientLight(0.2,0.2,0.2);
+        p.addSpotLight(
+        	1,1,1,
+        	5,5,5,
+        	0,0,0,
+        	true,true
+        )
+	
+        cube = new THREE.Mesh( 
+        	new THREE.CubeGeometry( 1, 1, 1 ), 
+        	new THREE.MeshPhongMaterial({ 
+			ambient		: 0x444444,
+			color		: 0xff0000,
+			shininess	: 200, 
+			specular	: 0xffffff,
+//			shading		: THREE.SmoothShading
+	}));
+	cube.castShadow=true;
+        scene.add( cube );
+
+	var floorTex=THREE.ImageUtils.loadTexture( "images/textures/RustedIronGrip-ColorMap.png" ); 
+	floorTex.repeat.set( 10, 10 );
+	floorTex.anisotropy = 8;
+	floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+
+	var floorTex2=THREE.ImageUtils.loadTexture( "images/textures/RustedIronGrip-NormalMap.png" ); 
+	floorTex2.repeat.set( 10, 10 );
+	floorTex2.anisotropy = 8;
+	floorTex2.wrapS = floorTex2.wrapT = THREE.RepeatWrapping;
+
+	
+	
+	plane = new THREE.Mesh(
+		new THREE.PlaneGeometry(10,10,10,10), 
+		new THREE.MeshPhongMaterial({ 
+			map		: floorTex,
+			normalMap	: floorTex2,
+//			specularMap	: floorTex,
+//			bumpMap		: floorTex,
+//			transparent	: true,
+			ambient		: 0xffffff,
+			color		: 0xcccccc,
+			shininess	: 200, 
+			specular	: 0xffffff
+
+	}));
+	plane.receiveShadow=true;
+        plane.position.y=-1.5;
+        plane.rotation.x=-90 * (Math.PI / 180);
+        scene.add(plane);
+
+
+	par = new P.ParTicles({
+		p:p,
+		size:1,
+		emitterPos:new THREE.Vector3( 0.0, 0.25, 0.0 ),
+		palette_name:'fire',
+//		sprite_url:'/images/xbox/a.png'
+	});
+
+	p.initRenderer(0x000000,true,true);
+	p.addStats("#stats-container");
+	p.initControls(camera);
+	dummy=p.controls.getObject();
+        dummy.position.set(0,0.5,4);	
+        p.controls.bindButton('A','down',function(e,data){
+        	par.toggle();
+        	console.log('A BUTTON DOWN');
+        });
+        p.controls.bindButton('Select','down',function(e,data){
+          $("#gamepads-container").toggle();
+        });
+        
+        p.controls.bindButton('Start','down',function(e,data){
+          $("#help-container").toggle();
+        });
+        p.controls.bindButton('Y','down',function(e,data){
+          if (par.palette_name=='fire'){
+          	par.changePalette('water');
+          }else{
+          	par.changePalette('fire');          
+          }
+        });
+        
+	$( document ).bind( 'button', function (e, data) {
+	    console.log( data);
+        } );        
+    }
+
+    function animate() {
+	var delta = p.clock.getDelta();
+	p.updateControls(delta);
+//        cube.rotation.x += 0.01;
+        cube.rotation.y += delta;
+	
+        if (p.renderer) {
+          if (par) par.render();
+          p.renderer.render( p.scene, p.camera );
+        }
+	if (p.stats) p.stats.update();
+
+// 	note: three.js includes requestAnimationFrame shim
+        requestAnimationFrame( animate );	
+    }    
+});
+</script>
+</script>
+</body>
+</html>
