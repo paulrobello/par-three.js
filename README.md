@@ -13,11 +13,15 @@ https://github.com/mrdoob/three.js/
 Optional Requirements:
 
 Particle system uses:
+
 Sparks.js
 https://github.com/zz85/sparks.js/
+
 Tween.js
 https://github.com/sole/tween.js/
-Controls uses
+
+Controls uses:
+
 Gamepad.js
 https://github.com/inequation/gamepad.js
 
