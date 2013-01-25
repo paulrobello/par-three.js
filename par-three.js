@@ -22,14 +22,43 @@ var P=function(settings){
   }  
   this.renderer=null;
   this.stats=null;  
+  var scope = this;
+  this.onWindowResize=function() {
+    if (scope.camera){
+      scope.camera.aspect = window.innerWidth / window.innerHeight;
+      scope.camera.updateProjectionMatrix();
+    }
+    if (scope.renderer){
+      scope.renderer.setSize( window.innerWidth-1, window.innerHeight-1 );
+    }
+  };      
+  window.addEventListener( 'resize', this.onWindowResize, false );
+};
+P.loadTex=function(settings){
+  var maps=['map','normalMap','specularMap','bumpMap'];
+  $.each(maps,function(i,map){
+    if (settings[map]){
+      settings[map]=THREE.ImageUtils.loadTexture( settings[map] );      
+      if (settings.anisotropy) settings[map].anisotropy=settings.anisotropy;
+      if (settings.repeat){
+        settings[map].repeat.set(settings.repeat.s,settings.repeat.t);
+        settings[map].wrapS = settings[map].wrapT = THREE.RepeatWrapping;      	
+      }
+    }
+  });
+  return settings;
+};
+P.TWO_PI=Math.PI*2;
+P.PI2=Math.PI/2;
+P.PI4=Math.PI/4;
+P.PI8=Math.PI/4;
+
+P.wrapRad=function(r){
+  if (r>=P.TWO_PI) r-=P.TWO_PI;
+  return r;
 };
 
 P.prototype={
-  onWindowResize:function() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize( window.innerWidth-1, window.innerHeight-1 );
-  },
   initRenderer:function(clearColor,antialias,shadowMap){
     this.renderer = new THREE.WebGLRenderer({
       antialias		  : antialias,	// to get smoother output
@@ -38,8 +67,8 @@ P.prototype={
     this.renderer.shadowMapEnabled = shadowMap;
     this.renderer.shadowMapSoft = shadowMap;
     this.renderer.setClearColorHex( clearColor, 1 );
+    
     this.onWindowResize();
-    window.addEventListener( 'resize', this.onWindowResize, false );
     $("#render-container").append( this.renderer.domElement );  
   },
   addStats:function(dom){
@@ -52,6 +81,7 @@ P.prototype={
     return stats;
   },
   addAmbientLight:function(r,g,b){
+    // hex
     var light = new THREE.AmbientLight( 0xffffff );    
     light.color.setRGB( r, g, b );
     this.scene.add( light );
@@ -59,7 +89,8 @@ P.prototype={
     return light;  
   },  
   addPointLight:function( r, g, b, x, y, z, flare ) {
-    var light = new THREE.PointLight( 0xffffff, 1.5, 4500 );
+    // hex, intensity, distance
+    var light = new THREE.PointLight( 0xffffff, 2.5, 4500 );
     light.position.set( x, y, z );
     light.color.setRGB( r, g, b );
     this.scene.add( light );
@@ -89,27 +120,33 @@ P.prototype={
     }
     
     if (this.helpers){
+      var helper = new THREE.PointLightHelper(light,0.1);
+      this.scene.add(sp_helper);    
     }
     this.lights.push(light);
     return light;
   },
   addDirectionalLight:function( r, g, b, x, y, z) {
-    var light = new THREE.DirectionalLight( 0xffffff, 1.5, 4500 );
+    // hex, intensity
+    var light = new THREE.DirectionalLight( 0xffffff, 1.5 );
     light.position.set( x, y, z );
     light.color.setRGB( r, g, b );
     this.scene.add( light );
 
     if (this.helpers){
+      var helper = new THREE.DirectionalLightHelper(light,0.1);
+      this.scene.add(sp_helper);                
     }
     this.lights.push(light);    
     return light;
   },
   addSpotLight:function(r, g, b, x, y, z, tx, ty, tz, shadow, flare ) {
-    var light = new THREE.SpotLight( 0xffffff, 1.5);
+    //hex, intensity, distance, angle, exponent
+    var light = new THREE.SpotLight( 0xffffff, 2.5);
     light.position.set( x, y, z );
-    light.target.position.set(tx, ty, tz);//.normalize();
-    this.scene.add( light );
+    light.target.position.set(tx, ty, tz);    
     light.color.setRGB( r, g, b );
+    this.scene.add( light );    
     if (shadow){
       light.castShadow = true;
       light.shadowDarkness = 0.5;
@@ -149,8 +186,8 @@ P.prototype={
     }
 
     if (this.helpers){
-      var sp_helper = new THREE.SpotLightHelper(light,0.1);
-      this.scene.add(sp_helper);
+      var helper = new THREE.SpotLightHelper(light,0.1);
+      this.scene.add(helper);
     }
     this.lights.push(light);    
     return light;
