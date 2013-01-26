@@ -87,38 +87,7 @@ $(document).ready(function() {
 	cube.castShadow=true;
         scene.add( cube );
 
-	var floorTex=THREE.ImageUtils.loadTexture( "images/textures/RustedIronGrip-ColorMap.png" ); 
-	floorTex.repeat.set( 10, 10 );
-	floorTex.anisotropy = 8;
-	floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-
-	var floorTex2=THREE.ImageUtils.loadTexture( "images/textures/RustedIronGrip-NormalMap.png" ); 
-	floorTex2.repeat.set( 10, 10 );
-	floorTex2.anisotropy = 8;
-	floorTex2.wrapS = floorTex2.wrapT = THREE.RepeatWrapping;
-
-	
-	
-	plane = new THREE.Mesh(
-		new THREE.PlaneGeometry(10,10,10,10), 
-		new THREE.MeshPhongMaterial({ 
-			map		: floorTex,
-			normalMap	: floorTex2,
-//			specularMap	: floorTex,
-//			bumpMap		: floorTex,
-//			transparent	: true,
-			ambient		: 0xffffff,
-			color		: 0xcccccc,
-			shininess	: 200, 
-			specular	: 0xffffff
-
-	}));
-	plane.receiveShadow=true;
-        plane.position.y=-1.5;
-        plane.rotation.x=-90 * (Math.PI / 180);
-        scene.add(plane);
-
-
+	scene.add( genFloor() );
 	par = new P.ParTicles({
 		p:p,
 		size:1,
@@ -154,6 +123,31 @@ $(document).ready(function() {
 	$( document ).bind( 'button', function (e, data) {
 	    console.log( data);
         } );        
+    }
+
+    function genFloor(){
+    	var tex={
+    	  map:"images/textures/RustedIronGrip-ColorMap.png",
+    	  normalMap:"images/textures/RustedIronGrip-NormalMap.png",
+    	  anisotropy:8,
+    	  repeat:{s:20,t:20}
+    	};
+	P.loadTex(tex);
+	var plane = new THREE.Mesh(
+		new THREE.PlaneGeometry(20,20,20,20), 
+		new THREE.MeshPhongMaterial({ 
+			map		: tex.map,
+			normalMap	: tex.normalMap,
+			ambient		: 0xffffff,
+			color		: 0xffffff,
+			shininess	: 200, 
+			specular	: 0xffffff
+
+	}));
+	plane.receiveShadow=true;
+        plane.position.y=-1.5;
+        plane.rotation.x=-90 * (Math.PI / 180);
+        return plane   
     }
 
     function animate() {
