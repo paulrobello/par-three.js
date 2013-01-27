@@ -15,9 +15,11 @@
 
 <script src="../par-three.js"></script>
 <script src="../par-controls.js"></script>
+<script src="../par-menu.js"></script>
 <script src="../par-particles.js"></script>
 
 <link type="text/css" href="css/main.css" rel="stylesheet" />
+<link type="text/css" href="css/piemenu.css" rel="stylesheet" />
   
 <style>
 body {
@@ -45,6 +47,16 @@ canvas {
 <body>
 <div id="render-container"></div>
 <div id="stats-container"></div>
+<div id="menu-container">
+<a class="menu_button" href="#" title="Toggle"><span>Menu Toggle</span></a>
+<ul class="menu_option">
+  <li icon="/images/xbox/x.png"><a href="#"><span>Details</span></a></li>
+  <li icon="/images/xbox/y.png"><a href="#"><span>Help</span></a></li>
+  <li icon="/images/xbox/a.png"><a href="#"><span>Accept</span></a></li>
+  <li icon="/images/xbox/b.png"><a href="#"><span>Back</span></a></li>
+</ul>
+</div>
+
 <div id="help-container" class="hud">
 Movement:<Br>
 WS=forward / backwards,AD=left / right, RF=up / down, or  Left stick<br>
@@ -124,6 +136,7 @@ $(document).ready(function() {
             par.changePalette('fire');          
       }
     });
+    p.addMenu();
     
     $( document ).bind( 'button', function (e, data) {
         console.log( data);

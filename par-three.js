@@ -27,11 +27,15 @@ var P=function(options){
   this.scenes=[];
   // holds all cameras
   this.cameras=[];
+  // holds all menus
+  this.menus=[];
 
   // main scene
   this.scene=this.addScene(this.options)
   // main camera
   this.camera=this.addCamera(this.options);
+  // main menu
+  this.menu=this.addMenu(this.options);
   
   this.renderer=null;
   this.stats=null;  
@@ -108,6 +112,11 @@ P.prototype={
     
     this.cameras.push(camera);
     return camera;
+  },  
+  addMenu:function(options){
+    var menu=new P.Menu(options);
+    this.menus.push(menu);
+    return menu;
   },  
   initRenderer:function(hex,options){
     var o={

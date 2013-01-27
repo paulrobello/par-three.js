@@ -1,18 +1,18 @@
-P.Controls = function ( settings ) {
-  settings=settings||{camera:null,speed:10};
-  settings.speed=settings.speed||10;
-  settings.invertY=true;
-  settings.invertY = settings.invertY ? -1 : 1;
-  settings.enabled=settings.enabled==undefined ? true : settings.enabled;
-  settings.showControls=settings.showControls || true;
-  this.settings=settings;
+P.Controls = function ( options ) {
+  options=options||{camera:null,speed:10};
+  options.speed=options.speed||10;
+  options.invertY=true;
+  options.invertY = options.invertY ? -1 : 1;
+  options.enabled=options.enabled==undefined ? true : options.enabled;
+  options.showControls=options.showControls || true;
+  this.options=options;
   
-  this.enabled = settings.enabled;    
+  this.enabled = options.enabled;    
   
-//  this.gamepad = new P.Gamepad(settings);
+//  this.gamepad = new P.Gamepad(options);
 
   this.pitchObject = new THREE.Object3D();
-  this.pitchObject.add( settings.camera );
+  this.pitchObject.add( options.camera );
 
   this.yawObject = new THREE.Object3D();
   this.yawObject.add( this.pitchObject );
@@ -140,7 +140,7 @@ P.Controls = function ( settings ) {
 
 P.Controls.prototype={  
  createDomElements:function() {
-   if (this.settings.showControls){
+   if (this.options.showControls){
      var root = document.getElementById('gamepads');
       for (var i = 0; i < 1; ++i) {
           var pad = document.createElement('div');
@@ -200,7 +200,7 @@ P.Controls.prototype={
   },
   update: function ( delta ) {
     if ( this.enabled === false ) return;
-    delta *= this.settings.speed;
+    delta *= this.options.speed;
 
     if (this.velocity.x) this.yawObject.translateX( this.velocity.x * delta);
     if (this.velocity.y) this.yawObject.translateY( this.velocity.y * delta); 
@@ -211,7 +211,7 @@ P.Controls.prototype={
       var i = 0;
       if (pad) {
         
-        if (this.settings.showControls){
+        if (this.options.showControls){
           document.getElementById('pad' + i).style.display = '';
           document.getElementById('pad' + i + '_title').innerHTML = pad.name;
           for (var j = 0; j < this.names.length; ++j) {
@@ -229,15 +229,15 @@ P.Controls.prototype={
           rightStick.style.top = Math.floor((pad.rightStickY + 1.0) / 2.0 * 256 - imgSize) + 'px';
         }
         
-        if (Math.abs(pad.rightStickY)>0.25) this.pitchObject.rotation.x+=pad.rightStickY*delta*0.25*this.settings.invertY;
+        if (Math.abs(pad.rightStickY)>0.25) this.pitchObject.rotation.x+=pad.rightStickY*delta*0.25*this.options.invertY;
         if (Math.abs(pad.rightStickX)>0.25) this.yawObject.rotation.y+=pad.rightStickX*delta*-0.25;
         this.limitLook();    
          
-        if (Math.abs(pad.leftStickY)>0.25) this.yawObject.translateZ(pad.leftStickY*delta*this.settings.speed*0.1);
-        if (Math.abs(pad.leftStickX)>0.25) this.yawObject.translateX(pad.leftStickX*delta*this.settings.speed*0.1);
+        if (Math.abs(pad.leftStickY)>0.25) this.yawObject.translateZ(pad.leftStickY*delta*this.options.speed*0.1);
+        if (Math.abs(pad.leftStickX)>0.25) this.yawObject.translateX(pad.leftStickX*delta*this.options.speed*0.1);
 
-        if (Math.abs(pad.leftShoulder1)>0.25) this.yawObject.translateY(pad.leftShoulder1*delta*this.settings.speed*-0.1);
-        if (Math.abs(pad.rightShoulder1)>0.25) this.yawObject.translateY(pad.rightShoulder1*delta*this.settings.speed*0.1);
+        if (Math.abs(pad.leftShoulder1)>0.25) this.yawObject.translateY(pad.leftShoulder1*delta*this.options.speed*-0.1);
+        if (Math.abs(pad.rightShoulder1)>0.25) this.yawObject.translateY(pad.rightShoulder1*delta*this.options.speed*0.1);
         
         
         var pad_old=this.pad_old;
