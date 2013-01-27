@@ -58,113 +58,115 @@ Look: Mouse Left Drag or Right stick<br>
 var p;
 var dummy,plane,cube;
 $(document).ready(function() {
-    init();
-    animate();
+  init();
+  animate();
 
-    function init() {
-    	p=new P();
-	var scene = p.scene;    
-        var camera = p.camera;
+  function init() {
+    p=new P({helpers:false});
+    var scene = p.scene;    
+    var camera = p.camera;
 
-	
-	p.addAmbientLight(0.2,0.2,0.2);
-        p.addSpotLight(
-        	1,1,1,
-        	5,5,5,
-        	0,0,0,
-        	true,true
-        )
-	
-        cube = new THREE.Mesh( 
-        	new THREE.CubeGeometry( 1, 1, 1 ), 
-        	new THREE.MeshPhongMaterial({ 
-			ambient		: 0x444444,
-			color		: 0xff0000,
-			shininess	: 200, 
-			specular	: 0xffffff,
-//			shading		: THREE.SmoothShading
-	}));
-	cube.castShadow=true;
-        scene.add( cube );
+    
+    p.addAmbientLight(0x555555);
+    p.addSpotLight(
+            0xffffff,
+            {x:5,y:5,z:5},
+            {x:0,y:0,z:0},
+            {shadow:true,
+             flare:true
+            }
+    );
+    
+    cube = new THREE.Mesh( 
+            new THREE.CubeGeometry( 1, 1, 1 ), 
+            new THREE.MeshPhongMaterial({ 
+                    ambient		: 0x444444,
+                    color		: 0xff0000,
+                    shininess	: 200, 
+                    specular	: 0xffffff,
+                    shading		: THREE.SmoothShading
+            })
+    );
+    cube.castShadow=true;
+    scene.add( cube );
 
-	scene.add( genFloor() );
-	par = new P.ParTicles({
-		p:p,
-		size:1,
-		emitterPos:new THREE.Vector3( 0.0, 0.25, 0.0 ),
-		palette_name:'fire',
-//		sprite_url:'/images/xbox/a.png'
-	});
+    scene.add( genFloor() );
+    par = new P.ParTicles({
+            p:p,
+            size:1,
+            emitterPos:new THREE.Vector3( 0.0, 0.25, 0.0 ),
+            palette_name:'fire'
+    });
 
-	p.initRenderer(0x000000,true,true);
-	p.addStats("#stats-container");
-	p.initControls(camera);
-	dummy=p.controls.getObject();
-        dummy.position.set(0,0.5,4);	
-        p.controls.bindButton('A','down',function(e,data){
-        	par.toggle();
-        	console.log('A BUTTON DOWN');
-        });
-        p.controls.bindButton('Select','down',function(e,data){
-          $("#gamepads-container").toggle();
-        });
-        
-        p.controls.bindButton('Start','down',function(e,data){
-          $("#help-container").toggle();
-        });
-        p.controls.bindButton('Y','down',function(e,data){
-          if (par.palette_name=='fire'){
-          	par.changePalette('water');
-          }else{
-          	par.changePalette('fire');          
-          }
-        });
-        
-	$( document ).bind( 'button', function (e, data) {
-	    console.log( data);
-        } );        
+    p.initRenderer(0x000000,{
+            antialias:true,
+            shadowMapEnabled:true
+    });
+    p.addStats("#stats-container");
+    p.initControls(camera);
+    dummy=p.controls.getObject();
+    dummy.position.set(0,0.5,4);	
+    p.controls.bindButton('A','down',function(e,data){
+      par.toggle();
+      console.log('A BUTTON DOWN');
+    });
+    p.controls.bindButton('Select','down',function(e,data){
+      $("#gamepads-container").toggle();
+    });
+    
+    p.controls.bindButton('Start','down',function(e,data){
+      $("#help-container").toggle();
+    });
+    p.controls.bindButton('Y','down',function(e,data){
+      if (par.palette_name=='fire'){
+            par.changePalette('water');
+      }else{
+            par.changePalette('fire');          
+      }
+    });
+    
+    $( document ).bind( 'button', function (e, data) {
+        console.log( data);
+    });        
+  }
+
+  function genFloor(){
+    var tex={
+      map:"images/textures/RustedIronGrip-ColorMap.png",
+      normalMap:"images/textures/RustedIronGrip-NormalMap.png",
+      anisotropy:8,
+      repeat:{s:20,t:20}
+    };
+    P.loadTex(tex);
+    var plane = new THREE.Mesh(
+            new THREE.PlaneGeometry(20,20,20,20), 
+            new THREE.MeshPhongMaterial({ 
+                    map		: tex.map,
+                    normalMap	: tex.normalMap,
+                    ambient	: 0xffffff,
+                    color	: 0xffffff,
+                    shininess	: 200, 
+                    specular	: 0xffffff
+
+    }));
+    plane.receiveShadow=true;
+    plane.position.y=-1.5;
+    plane.rotation.x=-90 * (Math.PI / 180);
+    return plane   
+  }
+
+  function animate(){
+    var delta = p.clock.getDelta();
+    p.updateControls(delta);
+    cube.rotation.y += delta;
+    
+    if (p.renderer) {
+      if (par) par.render();
+      p.renderer.render( p.scene, p.camera );
     }
-
-    function genFloor(){
-    	var tex={
-    	  map:"images/textures/RustedIronGrip-ColorMap.png",
-    	  normalMap:"images/textures/RustedIronGrip-NormalMap.png",
-    	  anisotropy:8,
-    	  repeat:{s:20,t:20}
-    	};
-	P.loadTex(tex);
-	var plane = new THREE.Mesh(
-		new THREE.PlaneGeometry(20,20,20,20), 
-		new THREE.MeshPhongMaterial({ 
-			map		: tex.map,
-			normalMap	: tex.normalMap,
-			ambient		: 0xffffff,
-			color		: 0xffffff,
-			shininess	: 200, 
-			specular	: 0xffffff
-
-	}));
-	plane.receiveShadow=true;
-        plane.position.y=-1.5;
-        plane.rotation.x=-90 * (Math.PI / 180);
-        return plane   
-    }
-
-    function animate() {
-	var delta = p.clock.getDelta();
-	p.updateControls(delta);
-//        cube.rotation.x += 0.01;
-        cube.rotation.y += delta;
-	
-        if (p.renderer) {
-          if (par) par.render();
-          p.renderer.render( p.scene, p.camera );
-        }
-	if (p.stats) p.stats.update();
-
-// 	note: three.js includes requestAnimationFrame shim
-        requestAnimationFrame( animate );	
-    }    
+    if (p.stats) p.stats.update();
+    requestAnimationFrame( animate );	
+  }
 });
 </script>
 </script>

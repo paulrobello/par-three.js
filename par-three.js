@@ -1,3 +1,4 @@
+//fix browsers with no console
 self.console = self.console || {
   info: function () {},
   log: function () {},
@@ -6,22 +7,36 @@ self.console = self.console || {
   error: function () {}
 };
 
-var P=function(settings){
-  settings=settings||{};
-  this.settings=settings;  
+var P=function(options){
+  options=options||{};
+  this.options={
+    helpers:false,
+    camera:{fov:60,near:0.1,far:1000},
+    fog:{type:'FogExp2',color:0x000000,density:0.005},
+  };
+  
+  $.extend(this.options,options);
+  
+  // used as clock system clock
   this.clock = new THREE.Clock();  
-  this.helpers=false;  
+  // used to hold lense flare textures
   this.textureFlare=[];
+  // holds all lights
   this.lights=[];
-  this.scene=new THREE.Scene();  
-//  this.scene.fog=new THREE.FogExp2(0x000000, 0.1);  
-  this.camera=new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 10000 );
-  if (this.helpers){
-    var c_helper= new THREE.CameraHelper(this.camera);
-    this.scene.add(c_helper);
-  }  
+  // holds all scenes
+  this.scenes=[];
+  // holds all cameras
+  this.cameras=[];
+
+  // main scene
+  this.scene=this.addScene(this.options)
+  // main camera
+  this.camera=this.addCamera(this.options);
+  
   this.renderer=null;
   this.stats=null;  
+  
+  // this is needed by the call backfunction because self=window when its called
   var scope = this;
   this.onWindowResize=function() {
     if (scope.camera){
@@ -34,40 +49,83 @@ var P=function(settings){
   };      
   window.addEventListener( 'resize', this.onWindowResize, false );
 };
-P.loadTex=function(settings){
-  var maps=['map','normalMap','specularMap','bumpMap'];
-  $.each(maps,function(i,map){
-    if (settings[map]){
-      settings[map]=THREE.ImageUtils.loadTexture( settings[map] );      
-      if (settings.anisotropy) settings[map].anisotropy=settings.anisotropy;
-      if (settings.repeat){
-        settings[map].repeat.set(settings.repeat.s,settings.repeat.t);
-        settings[map].wrapS = settings[map].wrapT = THREE.RepeatWrapping;      	
+P.loadTex=function(options){  
+  $.each(P.maps,function(i,map){
+    if (options[map]){
+      options[map]=THREE.ImageUtils.loadTexture( options[map] );      
+      if (options.anisotropy) options[map].anisotropy=options.anisotropy;
+      if (options.repeat){
+        options[map].repeat.set(options.repeat.s,options.repeat.t);
+        options[map].wrapS = options[map].wrapT = THREE.RepeatWrapping;      	
       }
     }
   });
-  return settings;
+  return options;
 };
+
+// diffrent map types used by the loadTex function
+P.maps=['map','normalMap','specularMap','bumpMap'];
+
+// math helpers
 P.TWO_PI=Math.PI*2;
 P.PI2=Math.PI/2;
 P.PI4=Math.PI/4;
-P.PI8=Math.PI/4;
+P.PI8=Math.PI/8;
 
+// used to cause rad values to wrap after 2*PI
 P.wrapRad=function(r){
-  if (r>=P.TWO_PI) r-=P.TWO_PI;
+  if (r>=P.TWO_PI) {
+    r-=P.TWO_PI;
+  }else if (r<=-P.TWO_PI) {
+    r+=P.TWO_PI;
+  }
   return r;
 };
 
 P.prototype={
-  initRenderer:function(clearColor,antialias,shadowMap){
-    this.renderer = new THREE.WebGLRenderer({
-      antialias		  : antialias,	// to get smoother output
-      preserveDrawingBuffer : false	// to allow screenshot
-    });
-    this.renderer.shadowMapEnabled = shadowMap;
-    this.renderer.shadowMapSoft = shadowMap;
-    this.renderer.setClearColorHex( clearColor, 1 );
+  addScene:function(options){
+    var scene=new THREE.Scene();  
+    if (options.fog){
+      switch (options.fog.type){
+        case 'Fog':scene.fog=new THREE.Fog(options.fog.color, options.fog.near, options.fog.far);break;
+        case 'FogExp2':scene.fog=new THREE.FogExp2(options.fog.color, options.fog.density);break;        
+        default: scene.fog=null;
+      }
+    }
+    this.scenes.push(scene);
+    return scene;
+  },
+  addCamera:function(options){
+    var camera = new THREE.PerspectiveCamera( 
+      options.camera.fov, 
+      window.innerWidth / window.innerHeight, 
+      options.camera.near, options.camera.far 
+    );
+    if (options.helpers){
+      var c_helper= new THREE.CameraHelper(camera);
+      this.scene.add(c_helper);
+    }  
     
+    this.cameras.push(camera);
+    return camera;
+  },  
+  initRenderer:function(hex,options){
+    var o={
+      antialias:false,
+      shadowMapEnabled:false,
+      shadowMapSoft:false,
+      preserveDrawingBuffer:false
+    };
+    $.extend(o,options);
+    var renderer = new THREE.WebGLRenderer({
+      antialias		  : o.antialias,	// to get smoother output
+      preserveDrawingBuffer : o.preserveDrawingBuffer	// to allow screenshot
+    });
+    renderer.shadowMapEnabled = o.shadowMapEnabled;
+    renderer.shadowMapSoft = o.shadowMapSoft;
+    renderer.setClearColorHex( hex, 1 );
+    
+    this.renderer=renderer;    
     this.onWindowResize();
     $("#render-container").append( this.renderer.domElement );  
   },
@@ -80,22 +138,30 @@ P.prototype={
     $(dom).append( stats.domElement );
     return stats;
   },
-  addAmbientLight:function(r,g,b){
+  // takes arguments of ether 
+  // object with r,g,b members
+  // r,g,b
+  // r which will apply r to g and b also
+  addAmbientLight:function(hex){
     // hex
-    var light = new THREE.AmbientLight( 0xffffff );    
-    light.color.setRGB( r, g, b );
+    var light = new THREE.AmbientLight( hex==undefined ? 0x555555 : hex );
     this.scene.add( light );
     this.lights.push(light);    
     return light;  
   },  
-  addPointLight:function( r, g, b, x, y, z, flare ) {
-    // hex, intensity, distance
-    var light = new THREE.PointLight( 0xffffff, 2.5, 4500 );
-    light.position.set( x, y, z );
-    light.color.setRGB( r, g, b );
+  addPointLight:function( hex, pos, flare ) {
+    var o={
+      intensity:1,
+      distance:0,
+      flare:false
+    };
+    $.extend(o,options);
+  
+    var light = new THREE.PointLight( hex==undefined ? 0xffffff : hex, o.intensity, o.distance );
+    light.position.set( pos.x, pos.y, pos.z );
     this.scene.add( light );
     
-    if (flare){
+    if (o.flare){
       if (!this.textureFlare.length) this.initFlare();
 
       var flareColor = new THREE.Color( 0xffffff );
@@ -119,50 +185,69 @@ P.prototype={
       this.scene.add( lensFlare );
     }
     
-    if (this.helpers){
+    if (this.options.helpers){
       var helper = new THREE.PointLightHelper(light,0.1);
       this.scene.add(sp_helper);    
     }
     this.lights.push(light);
     return light;
   },
-  addDirectionalLight:function( r, g, b, x, y, z) {
-    // hex, intensity
-    var light = new THREE.DirectionalLight( 0xffffff, 1.5 );
-    light.position.set( x, y, z );
-    light.color.setRGB( r, g, b );
+  addDirectionalLight:function( hex, dir, options) {
+    var o={
+      intensity:1
+    }
+    $.extend(o,options);
+    
+    var light = new THREE.DirectionalLight( hex==undefined ? 0xffffff : hex, o.intensity );
+    light.position.set( dir.x, dir.y, dir.z );
     this.scene.add( light );
 
-    if (this.helpers){
+    if (this.options.helpers){
       var helper = new THREE.DirectionalLightHelper(light,0.1);
       this.scene.add(sp_helper);                
     }
     this.lights.push(light);    
     return light;
   },
-  addSpotLight:function(r, g, b, x, y, z, tx, ty, tz, shadow, flare ) {
-    //hex, intensity, distance, angle, exponent
-    var light = new THREE.SpotLight( 0xffffff, 2.5);
-    light.position.set( x, y, z );
-    light.target.position.set(tx, ty, tz);    
-    light.color.setRGB( r, g, b );
+  addSpotLight:function(hex, pos, tar, options ) {
+    var o={
+      intensity:1,
+      distance:0,
+      angle:P.PI2,
+      exponent:10,
+      flare:false,
+      shadow:false,
+      shadowMapWidth:1024,
+      shadowMapHeight:1024
+    }
+    $.extend(o,options);
+
+    var light = new THREE.SpotLight( 
+      hex==undefined ? 0xffffff : hex, 
+      o.intensity, 
+      o.distance, 
+      o.angle, 
+      o.exponent
+    );
+    light.position.set( pos.x, pos.y, pos.z );
+    light.target.position.set(tar.x, tar.y, tar.z);    
     this.scene.add( light );    
-    if (shadow){
+    if (o.shadow){
       light.castShadow = true;
       light.shadowDarkness = 0.5;
-      if (this.helpers) light.shadowCameraVisible = true;
-      light.shadowMapWidth = 1024; 
-      light.shadowMapHeight = 1024;  
-      light.shadowCameraNear = 0.01; 
-      light.shadowCameraFar = 100; 
-      light.shadowCameraFov = 30;
-  //  	light.shadowCameraRight     =  5;
-  //  	light.shadowCameraLeft      = -5;
-  //  	light.shadowCameraTop       =  5;
-  //  	light.shadowCameraBottom    = -5;
+      if (this.options.helpers) light.shadowCameraVisible = true;
+      light.shadowMapWidth = o.shadowMapWidth; 
+      light.shadowMapHeight = o.shadowMapHeight;  
+      light.shadowCameraNear = this.options.camera.near; 
+      light.shadowCameraFar = this.options.camera.far; 
+      light.shadowCameraFov = this.options.camera.fov;
+      //light.shadowCameraRight     =  5;
+      //light.shadowCameraLeft      = -5;
+      //light.shadowCameraTop       =  5;
+      //light.shadowCameraBottom    = -5;
     }
 
-    if (flare){
+    if (o.flare){
       if (!this.textureFlare.length) this.initFlare();
     
       var flareColor = new THREE.Color( 0xffffff );
@@ -185,13 +270,14 @@ P.prototype={
       this.scene.add( lensFlare );
     }
 
-    if (this.helpers){
+    if (this.options.helpers){
       var helper = new THREE.SpotLightHelper(light,0.1);
       this.scene.add(helper);
     }
     this.lights.push(light);    
     return light;
   },
+  // used to update flare layout if camera / light moves
   lensFlareUpdateCallback:function( object ) {
     var f, fl = object.lensFlares.length;
     var flare;
@@ -208,6 +294,7 @@ P.prototype={
     object.lensFlares[ 1 ].y += 0.025;
     object.lensFlares[ 2 ].rotation = object.positionScreen.x * 0.5 + Math.PI/2;
   },
+  // load flare textures
   initFlare:function(){
     this.textureFlare[0]= THREE.ImageUtils.loadTexture( "images/lensflare/lensflare0.png" );
     this.textureFlare[1]= THREE.ImageUtils.loadTexture( "images/lensflare/lensflare2.png" );
@@ -215,22 +302,17 @@ P.prototype={
   },
   initControls:function(obj){
     var controls = new P.Controls({camera:obj}); // Handles camera control
-    controls.enabled=true;
-//    controls.movementSpeed = MOVESPEED; // How fast the player can walk around
-//    controls.rotateSpeed = 0.1;
-//    controls.autoForward=false;
-//    controls.lookSpeed = LOOKSPEED; // How fast the player can look around with the mouse
-//    controls.dragToLook=true;  
     this.controls=controls;
-    controls.getObject().position.y=0;
     this.scene.add(controls.getObject());
     return controls;
   },
   updateControls:function(delta){
-    this.controls.update(delta); // Move dummy  
+    if (this.controls) this.controls.update(delta); // Move dummy  
   },
 };
 
+
+// functions below are ready
 function getDir(obj){
   var pLocal = new THREE.Vector3( 0, 0, -1 );
   //Now transform that point into world space:
