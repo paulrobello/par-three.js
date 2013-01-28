@@ -1,11 +1,11 @@
-P.ParTicles = function(settings){
-  settings=settings || {};
-  settings.ps=this;
-  settings.particlesLength=settings.particlesLength || 1000;
-  settings.size=settings.size || 0.25;
-  settings.palette_name=settings.palette_name||'fire';
+P.ParTicles = function(options){
+  options=options || {};
+  options.ps=this;
+  options.particlesLength=options.particlesLength || 1000;
+  options.size=options.size || 0.25;
+  options.palette_name=options.palette_name||'fire';
   
-  this._settings=settings;
+  this._options=options;
   this._pool = {
       __pools: [],
       // Get a new Vector
@@ -45,27 +45,27 @@ P.ParTicles = function(settings){
       new THREE.Color(0x000000)
     ],        
   };
-  this.palette_name=settings.palette_name;
-  this._colors=settings.colors || this.palettes[settings.palette_name];
-  this.size=settings.size;
+  this.palette_name=options.palette_name;
+  this._colors=options.colors || this.palettes[options.palette_name];
+  this.size=options.size;
   
   this._particles = new THREE.Geometry();
   var particles = this._particles;
   var pool=this._pool;
   
   // Create pools of vectors  
-  for ( var i = 0; i < settings.particlesLength; i ++ ) {
+  for ( var i = 0; i < options.particlesLength; i ++ ) {
     particles.vertices.push( new THREE.Vector3() );
     particles.colors[i]= new THREE.Color(0xffffff);
     pool.add( i );    
   }
 
-  if (!settings.sprite_url){
+  if (!options.sprite_url){
     var canvas  = this.generatePointSprite(255,255,255);
-    if (settings.showPointSprite) $(settings.showPointSprite).append(canvas);
+    if (options.showPointSprite) $(options.showPointSprite).append(canvas);
     this._texture = new THREE.Texture( canvas );
   }else{
-    this._texture=THREE.ImageUtils.loadTexture(settings.sprite_url);
+    this._texture=THREE.ImageUtils.loadTexture(options.sprite_url);
   }  
   
   this._texture.needsUpdate = true;
@@ -89,9 +89,9 @@ P.ParTicles = function(settings){
     vertices[ v ].set( Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY );
   }
 
-  settings.p.scene.add( this._cloud );
+  options.p.scene.add( this._cloud );
     
-  this.initSparks(settings);
+  this.initSparks(options);
 }
 
 P.ParTicles.prototype={
@@ -100,33 +100,33 @@ P.ParTicles.prototype={
     this.palette_name=name||'fire';
     this._colors=this.palettes[this.palette_name]||this.palettes[this.palette_name='fire'];
   },
-  initSparks:function(settings){
-    settings=settings || {};
+  initSparks:function(options){
+    options=options || {};
 
-    settings.emitterPos=settings.emitterPos || new THREE.Vector3( 0, 0, 0 );
-    settings.gravity=settings.gravity || new THREE.Vector3( 0, -9.81, 0 );
-    settings.drift=settings.drift || new THREE.Vector3( 1, 1, 1 );
-    settings.lifeStart=settings.lifeStart||0;
-    settings.lifeEnd=settings.lifeEnd||2;
-    settings.steadyCounter=settings.steadyCounter||100;
-    settings.p=settings.p||null;
+    options.emitterPos=options.emitterPos || new THREE.Vector3( 0, 0, 0 );
+    options.gravity=options.gravity || new THREE.Vector3( 0, -9.81, 0 );
+    options.drift=options.drift || new THREE.Vector3( 1, 1, 1 );
+    options.lifeStart=options.lifeStart||0;
+    options.lifeEnd=options.lifeEnd||2;
+    options.steadyCounter=options.steadyCounter||100;
+    options.p=options.p||null;
     
-    if (settings.autoStart===undefined) settings.autoStart=true;
+    if (options.autoStart===undefined) options.autoStart=true;
     
-    var counter = new SPARKS.SteadyCounter( settings.steadyCounter );
+    var counter = new SPARKS.SteadyCounter( options.steadyCounter );
     var emitter = new SPARKS.Emitter( counter );
-    emitter.p=settings.p; // set master P object for this instance
+    emitter.p=options.p; // set master P object for this instance
     
     emitter.addInitializer( new SPARKS.Target( this, this.setTarget ) );
-  //  emitter.addInitializer( new SPARKS.Position( new SPARKS.CubeZone( settings.emitterPos,1,1,1 ) ) );
+  //  emitter.addInitializer( new SPARKS.Position( new SPARKS.CubeZone( options.emitterPos,1,1,1 ) ) );
     emitter.addInitializer( this ); // allows us to set ps to this on particle so target can be looked up
-    emitter.addInitializer( new SPARKS.Position( new SPARKS.PointZone( settings.emitterPos ) ) );
-    emitter.addInitializer( new SPARKS.Lifetime( settings.lifeStart, settings.lifeEnd ));
+    emitter.addInitializer( new SPARKS.Position( new SPARKS.PointZone( options.emitterPos ) ) );
+    emitter.addInitializer( new SPARKS.Lifetime( options.lifeStart, options.lifeEnd ));
   //  emitter.addInitializer( new SPARKS.Velocity( new SPARKS.CubeZone( new THREE.Vector3( -5, -5, -5 ),10,10,10 ) ) );
     emitter.addAction( new SPARKS.Age(TWEEN.Easing.Linear.None) );
     emitter.addAction( this ); // allows us to change colors over life span
-    emitter.addAction( new SPARKS.Accelerate( settings.gravity.x, settings.gravity.y, settings.gravity.z ) );
-    emitter.addAction( new SPARKS.RandomDrift( settings.drift.x, settings.drift.y, settings.drift.z ) );	
+    emitter.addAction( new SPARKS.Accelerate( options.gravity.x, options.gravity.y, options.gravity.z ) );
+    emitter.addAction( new SPARKS.RandomDrift( options.drift.x, options.drift.y, options.drift.z ) );	
     emitter.addAction( new SPARKS.Move() );
     emitter.addAction( new SPARKS.DeathZone( new SPARKS.CubeZone( new THREE.Vector3( -100, -11, -100 ),200,10,200 ) ) ); // die on floor
 
@@ -134,7 +134,7 @@ P.ParTicles.prototype={
     emitter.addCallback( "dead", this.onParticleDead );
           
     this.emitter=emitter;
-    if (settings.autoStart) this.start();
+    if (options.autoStart) this.start();
     
     return emitter;
   },

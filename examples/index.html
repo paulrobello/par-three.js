@@ -119,8 +119,7 @@ $(document).ready(function() {
     dummy=p.controls.getObject();
     dummy.position.set(0,0.5,4);	
     p.controls.bindButton('A','down',function(e,data){
-      par.toggle();
-      console.log('A BUTTON DOWN');
+    	p.menu.click();
     });
     p.controls.bindButton('Select','down',function(e,data){
       $("#gamepads-container").toggle();
@@ -136,7 +135,6 @@ $(document).ready(function() {
             par.changePalette('fire');          
       }
     });
-    p.addMenu();
     
     $( document ).bind( 'button', function (e, data) {
         console.log( data);

@@ -21,72 +21,9 @@ P.Controls = function ( options ) {
 
   this.limit = Math.PI / 4;
 
-  this.dc=0;
+  this.mouseDown=false;
 
-  var scope = this;
   
-  var onMouseMove=function ( event ) {
-    if ( scope.enabled === false || !scope.dc) return;
-    var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-    var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-    if (movementX) scope.yawObject.rotation.y   -= movementX * 0.002;
-    if (movementY) scope.pitchObject.rotation.x -= movementY * 0.002;
-    scope.limitLook();
-    
-  };
-  var onMouseDown=function ( event ) {
-    if ( scope.enabled === false ) return;
-    scope.dc++;
-  };
-  var onMouseUp=function ( event ) {
-    if ( scope.enabled === false ) return;
-    scope.dc--;
-  };
-
-  var onKeyDown= function ( event ) {
-    switch ( event.keyCode ) {
-      case 38: // up
-      case 87: // w
-        scope.velocity.z=-1;break;
-      case 37: // left
-      case 65: // a
-        scope.velocity.x=-1; break;
-      case 40: // down
-      case 83: // s
-        scope.velocity.z=1;break;
-      case 39: // right
-      case 68: // d
-        scope.velocity.x=1;break;
-      case 82: // r
-        scope.velocity.y=1;break;
-      case 70: // f
-        scope.velocity.y=-1;break;
-    }
-  };
-  var onKeyUp=function ( event ) {
-    switch( event.keyCode ) {
-	case 38: // up
-	case 87: // w
-  	  scope.velocity.z=0;break;
-	case 37: // left
-	case 65: // a
-	  scope.velocity.x=0;break;
-	case 40: // down
-	case 83: // a
-	  scope.velocity.z=0;break;
-	case 39: // right
-	case 68: // d
-	  scope.velocity.x=0;break;
-	case 82: // r
-	  scope.velocity.y=0;break;
-	case 70: // f
-	  scope.velocity.y=0;break;
-//			default:
-//				console.log(event.keyCode);
-    
-    }
-  };
 
  this.names = [
             'leftStick',
@@ -130,15 +67,76 @@ P.Controls = function ( options ) {
             'dpadRight':'DPadRight'
         };
   
-  document.addEventListener( 'mousemove', onMouseMove, false );
-  document.addEventListener( 'mousedown', onMouseDown, false );
-  document.addEventListener( 'mouseup', onMouseUp, false );
-  document.addEventListener( 'keydown', onKeyDown, false );
-  document.addEventListener( 'keyup', onKeyUp, false ); 
+  document.addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
+  document.addEventListener( 'mousedown', this.onMouseDown.bind(this), false );
+  document.addEventListener( 'mouseup',   this.onMouseUp.bind(this),   false );
+  document.addEventListener( 'keydown',   this.onKeyDown.bind(this),   false );
+  document.addEventListener( 'keyup',     this.onKeyUp.bind(this),     false ); 
   this.createDomElements();
 };
 
 P.Controls.prototype={  
+  onMouseMove:function ( event ) {
+    if ( this.enabled === false || !this.mouseDown) return;
+    var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+    var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+
+    if (movementX) this.yawObject.rotation.y   -= movementX * 0.002;
+    if (movementY) this.pitchObject.rotation.x -= movementY * 0.002;
+    this.limitLook();
+    
+  },
+  onMouseDown:function ( event ) {
+    if ( this.enabled === false ) return;
+    this.mouseDown=true;
+  },
+  onMouseUp:function ( event ) {
+    if ( this.enabled === false ) return;
+    this.mouseDown=false;
+  },
+  onKeyDown:function ( event ) {
+    switch ( event.keyCode ) {
+      case 38: // up
+      case 87: // w
+        this.velocity.z=-1;break;
+      case 37: // left
+      case 65: // a
+        this.velocity.x=-1; break;
+      case 40: // down
+      case 83: // s
+        this.velocity.z=1;break;
+      case 39: // right
+      case 68: // d
+        this.velocity.x=1;break;
+      case 82: // r
+        this.velocity.y=1;break;
+      case 70: // f
+        this.velocity.y=-1;break;
+    }
+  },
+  onKeyUp:function ( event ) {
+    switch( event.keyCode ) {
+	case 38: // up
+	case 87: // w
+  	  this.velocity.z=0;break;
+	case 37: // left
+	case 65: // a
+	  this.velocity.x=0;break;
+	case 40: // down
+	case 83: // a
+	  this.velocity.z=0;break;
+	case 39: // right
+	case 68: // d
+	  this.velocity.x=0;break;
+	case 82: // r
+	  this.velocity.y=0;break;
+	case 70: // f
+	  this.velocity.y=0;break;
+//	default:
+//  	console.log(event.keyCode);
+    
+    }
+  },
  createDomElements:function() {
    if (this.options.showControls){
      var root = document.getElementById('gamepads');

@@ -40,18 +40,7 @@ var P=function(options){
   this.renderer=null;
   this.stats=null;  
   
-  // this is needed by the call backfunction because self=window when its called
-  var scope = this;
-  this.onWindowResize=function() {
-    if (scope.camera){
-      scope.camera.aspect = window.innerWidth / window.innerHeight;
-      scope.camera.updateProjectionMatrix();
-    }
-    if (scope.renderer){
-      scope.renderer.setSize( window.innerWidth-1, window.innerHeight-1 );
-    }
-  };      
-  window.addEventListener( 'resize', this.onWindowResize, false );
+  window.addEventListener( 'resize', this.onWindowResize.bind(this), false );
 };
 P.loadTex=function(options){  
   $.each(P.maps,function(i,map){
@@ -87,6 +76,15 @@ P.wrapRad=function(r){
 };
 
 P.prototype={
+  onWindowResize:function() {
+    if (this.camera){
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+    }
+    if (this.renderer){
+      this.renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+  },
   addScene:function(options){
     var scene=new THREE.Scene();  
     if (options.fog){
@@ -318,6 +316,49 @@ P.prototype={
   updateControls:function(delta){
     if (this.controls) this.controls.update(delta); // Move dummy  
   },
+  setupPointerLock:function(element) {
+    var self = this
+    element = element || document.body
+    if (typeof element !== 'object') element = document.querySelector(element)
+    var pointer = this.pointer = interact(element)
+    if (!pointer.pointerAvailable()) this.pointerLockDisabled = true
+    pointer.on('attain', function(movements) {
+      self.controls.enabled = true;
+      movements.pipe(self.controls)
+    });
+    pointer.on('release', function() {
+      self.controls.enabled = false;
+    });
+    pointer.on('error', function() {
+      // user denied pointer lock OR it's not available
+      self.pointerLockDisabled = true;
+      console.error('pointerlock error');
+    });
+  },
+  raycast:function(maxDistance) {
+    var start = this.controls.getObject().position.clone();
+    var direction = this.camera.matrixWorld.multiplyVector3(new THREE.Vector3(0,0,-1));
+    //var intersects = this.intersectAllMeshes(start, direction, maxDistance);
+    return intersects;
+  },
+  requestPointerLock:function(element) {
+    if (!this.pointer) this.setupPointerLock(element);
+    this.pointer.request();
+  },
+  notCapable:function() {
+    if( !Detector().webgl ) {
+      var wrapper = document.createElement('div');
+      wrapper.className = "errorMessage";
+      var a = document.createElement('a');
+      a.title = "You need WebGL and Pointer Lock (Chrome 23/Firefox 14) to play this game. Click here for more information.";
+      a.innerHTML = a.title;
+      a.href = "http://get.webgl.org";
+      wrapper.appendChild(a);
+      this.element = wrapper;
+      return true;
+    }
+    return false;
+  }  
 };
 
 
