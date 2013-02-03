@@ -121,20 +121,17 @@ P.prototype={
       antialias:false,
       shadowMapEnabled:false,
       shadowMapSoft:false,
-      preserveDrawingBuffer:false
+      preserveDrawingBuffer:false // allow screenshot
     };
     $.extend(o,options);
-    var renderer = new THREE.WebGLRenderer({
-      antialias		  : o.antialias,	// to get smoother output
-      preserveDrawingBuffer : o.preserveDrawingBuffer	// to allow screenshot
-    });
-    renderer.shadowMapEnabled = o.shadowMapEnabled;
-    renderer.shadowMapSoft = o.shadowMapSoft;
+    var renderer = new THREE.WebGLRenderer(o);
+//    renderer.shadowMapEnabled = o.shadowMapEnabled;
+//    renderer.shadowMapSoft = o.shadowMapSoft;
     renderer.setClearColorHex( hex, 1 );
     
     this.renderer=renderer;    
+    $("#render-container").append( this.renderer.domElement );      
     this.onWindowResize();
-    $("#render-container").append( this.renderer.domElement );  
   },
   addStats:function(dom){
     dom=dom||$("<div></div>");
@@ -145,17 +142,28 @@ P.prototype={
     $(dom).append( stats.domElement );
     return stats;
   },
-  // takes arguments of ether 
-  // object with r,g,b members
-  // r,g,b
-  // r which will apply r to g and b also
   addAmbientLight:function(hex){
-    // hex
     var light = new THREE.AmbientLight( hex==undefined ? 0x555555 : hex );
     this.scene.add( light );
     this.lights.push(light);    
     return light;  
   },  
+  buildFlare:function(light,flareColor){
+    var lensFlare = new THREE.LensFlare( this.textureFlare[0], 700, 0.0, THREE.AdditiveBlending, flareColor );
+
+    lensFlare.add( this.textureFlare[1], 512, 0.0, THREE.AdditiveBlending );
+    lensFlare.add( this.textureFlare[1], 512, 0.0, THREE.AdditiveBlending );
+    lensFlare.add( this.textureFlare[1], 512, 0.0, THREE.AdditiveBlending );
+
+    lensFlare.add( this.textureFlare[2], 60, 0.6, THREE.AdditiveBlending );
+    lensFlare.add( this.textureFlare[2], 70, 0.7, THREE.AdditiveBlending );
+    lensFlare.add( this.textureFlare[2], 120, 0.9, THREE.AdditiveBlending );
+    lensFlare.add( this.textureFlare[2], 70, 1.0, THREE.AdditiveBlending );
+
+    lensFlare.customUpdateCallback = this.lensFlareUpdateCallback;
+    lensFlare.position = light.position;
+    return lensFlare;  
+  },
   addPointLight:function( hex, pos, flare ) {
     var o={
       intensity:1,
@@ -174,22 +182,7 @@ P.prototype={
       var flareColor = new THREE.Color( 0xffffff );
       flareColor.copy( light.color );
       THREE.ColorUtils.adjustHSV( flareColor, 0, -0.5, 0.5 );
-
-      var lensFlare = new THREE.LensFlare( this.textureFlare[0], 700, 0.0, THREE.AdditiveBlending, flareColor );
-
-      lensFlare.add( this.textureFlare[1], 512, 0.0, THREE.AdditiveBlending );
-      lensFlare.add( this.textureFlare[1], 512, 0.0, THREE.AdditiveBlending );
-      lensFlare.add( this.textureFlare[1], 512, 0.0, THREE.AdditiveBlending );
-
-      lensFlare.add( this.textureFlare[2], 60, 0.6, THREE.AdditiveBlending );
-      lensFlare.add( this.textureFlare[2], 70, 0.7, THREE.AdditiveBlending );
-      lensFlare.add( this.textureFlare[2], 120, 0.9, THREE.AdditiveBlending );
-      lensFlare.add( this.textureFlare[2], 70, 1.0, THREE.AdditiveBlending );
-
-      lensFlare.customUpdateCallback = this.lensFlareUpdateCallback;
-      lensFlare.position = light.position;
-
-      this.scene.add( lensFlare );
+      this.scene.add( this.buildFlare(light,flareColor) );
     }
     
     if (this.options.helpers){
@@ -261,20 +254,7 @@ P.prototype={
       flareColor.copy( light.color );
       THREE.ColorUtils.adjustHSV( flareColor, 0, -0.5, 0.5 );
 
-      var lensFlare = new THREE.LensFlare( this.textureFlare[0], 700, 0.0, THREE.AdditiveBlending, flareColor );
-      lensFlare.add( this.textureFlare[1], 512, 0.0, THREE.AdditiveBlending );
-      lensFlare.add( this.textureFlare[1], 512, 0.0, THREE.AdditiveBlending );
-      lensFlare.add( this.textureFlare[1], 512, 0.0, THREE.AdditiveBlending );
-
-      lensFlare.add( this.textureFlare[2], 60, 0.6, THREE.AdditiveBlending );
-      lensFlare.add( this.textureFlare[2], 70, 0.7, THREE.AdditiveBlending );
-      lensFlare.add( this.textureFlare[2], 120, 0.9, THREE.AdditiveBlending );
-      lensFlare.add( this.textureFlare[2], 70, 1.0, THREE.AdditiveBlending );
-
-      lensFlare.customUpdateCallback = this.lensFlareUpdateCallback;
-      lensFlare.position = light.position;
-
-      this.scene.add( lensFlare );
+      this.scene.add( this.buildFlare(light,flareColor) );
     }
 
     if (this.options.helpers){
