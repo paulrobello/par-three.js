@@ -7,9 +7,9 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
 <script src="../js/tween.js/build/tween.min.js"></script>
 <script src="../js/gamepad.js/gamepad.js"></script>
-
+<!-- used for particles -->
 <script src="../js/sparks.js/Sparks.js"></script>
-
+<!-- used for rendering -->
 <script src="../js/three.js/build/three.js"></script>
 <script src="../js/three.js/examples/js/libs/stats.min.js"></script>
 
@@ -18,20 +18,12 @@
 <script src="../par-menu.js"></script>
 <script src="../par-particles.js"></script>
 
+<!-- general dom layout css -->
 <link type="text/css" href="css/main.css" rel="stylesheet" />
+<!-- used for pi menu system -->
 <link type="text/css" href="css/piemenu.css" rel="stylesheet" />
   
 <style>
-body {
-  overflow:hidden;
-  font-family: Monospace;
-}
-canvas { 
-  border: 0px solid black;
-  background-color: #000;
-  z-index:1;
-}
-
 #gamepads-container {
   top:5px;
   left:5px; 
@@ -77,44 +69,43 @@ $(document).ready(function() {
     p=new P({helpers:false});
     var scene = p.scene;    
     var camera = p.camera;
-
     
     p.addAmbientLight(0x555555);
-    p.addSpotLight(
-            0xffffff,
-            {x:5,y:5,z:5},
-            {x:0,y:0,z:0},
-            {shadow:true,
-             flare:true
-            }
-    );
+    p.addSpotLight({
+      color:0xffffff,
+      pos:{x:5,y:5,z:5},
+      target:{x:0,y:0,z:0},
+      shadow:true,
+      flare:true
+    });
     
     cube = new THREE.Mesh( 
-            new THREE.CubeGeometry( 1, 1, 1 ), 
-            new THREE.MeshPhongMaterial({ 
-                    ambient		: 0x444444,
-                    color		: 0xff0000,
-                    shininess	: 200, 
-                    specular	: 0xffffff,
-                    shading		: THREE.SmoothShading
-            })
+      new THREE.CubeGeometry( 1, 1, 1 ), 
+      new THREE.MeshPhongMaterial({ 
+        ambient		: 0x444444,
+        color		: 0xff0000,
+        shininess	: 200, 
+        specular	: 0xffffff,
+        shading		: THREE.SmoothShading
+     })
     );
     cube.castShadow=true;
     scene.add( cube );
 
     scene.add( genFloor() );
     par = new P.ParTicles({
-            p:p,
-            size:1,
-            emitterPos:new THREE.Vector3( 0.0, 0.25, 0.0 ),
-            palette_name:'fire'
+      p:p,
+      size:1,
+      emitterPos:new THREE.Vector3( 0.0, 0.25, 0.0 ),
+      palette_name:'fire'
     });
 
-    p.initRenderer(0x000000,{
-            antialias:true,
-            shadowMapEnabled:true
+    p.initRenderer({
+      clearColor:0x000000,
+      antialias:true,
+      shadowMapEnabled:true
     });
-    p.addStats("#stats-container");
+    p.addStats({dom:"#stats-container"});
     p.initControls(camera);
     dummy=p.controls.getObject();
     dummy.position.set(0,0.5,4);	
@@ -130,14 +121,14 @@ $(document).ready(function() {
     });
     p.controls.bindButton('Y','down',function(e,data){
       if (par.palette_name=='fire'){
-            par.changePalette('water');
+        par.changePalette('water');
       }else{
-            par.changePalette('fire');          
+        par.changePalette('fire');          
       }
     });
     
     $( document ).bind( 'button', function (e, data) {
-        console.log( data);
+      console.log( data);
     });        
   }
 
@@ -150,15 +141,14 @@ $(document).ready(function() {
     };
     P.loadTex(tex);
     var plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(20,20,20,20), 
-            new THREE.MeshPhongMaterial({ 
-                    map		: tex.map,
-                    normalMap	: tex.normalMap,
-                    ambient	: 0xffffff,
-                    color	: 0xffffff,
-                    shininess	: 200, 
-                    specular	: 0xffffff
-
+      new THREE.PlaneGeometry(20,20,20,20), 
+      new THREE.MeshPhongMaterial({ 
+        map		: tex.map,
+        normalMap	: tex.normalMap,
+        ambient		: 0xffffff,
+        color		: 0xffffff,
+        shininess	: 200, 
+        specular	: 0xffffff
     }));
     plane.receiveShadow=true;
     plane.position.y=-1.5;

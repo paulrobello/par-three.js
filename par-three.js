@@ -11,11 +11,57 @@ var P=function(options){
   options=options||{};
   this.options={
     helpers:false,
+    
     camera:{fov:60,near:0.1,far:1000},
     fog:{type:'FogExp2',color:0x000000,density:0.005},
+    
+    ambientLight:{color:0x555555},
+    pointLight:{
+      color:0xFFFFFF,
+      intensity:1,
+      distance:0,
+      pos:{x:10,y:10,z:10},
+      flare:false,
+    },    
+    directionalLight:{
+      color:0xFFFFFF,
+      intensity:1,
+      dir:{x:10,y:10,z:10}
+    },    
+    spotLight:{
+      color:0xFFFFFF,
+      intensity:1,
+      distance:0,
+      angle:P.PI2,
+      exponent:10,
+      pos:{x:5,y:5,z:5},
+      target:{x:0,y:0,z:0},
+      flare:false,
+      shadow:false,
+      shadowMapWidth:1024,
+      shadowMapHeight:1024
+    },
+    
+    renderer:{
+      clearColor:0x000000,
+      clearAlpha:1,
+      antialias:false,
+      shadowMapEnabled:false,
+      shadowMapSoft:false,
+      preserveDrawingBuffer:false // allow screenshot      
+    },
+    stats:{
+      dom:"<div></div>",
+      domElement:{
+        style:{
+          position:'absolute',
+          bottom:'0px'
+        }
+      }
+    }    
   };
   
-  $.extend(this.options,options);
+  $.extend(true,this.options,options);
   
   // used as clock system clock
   this.clock = new THREE.Clock();  
@@ -27,6 +73,8 @@ var P=function(options){
   this.scenes=[];
   // holds all cameras
   this.cameras=[];
+  // holds all renderers
+  this.renderers=[];
   // holds all menus
   this.menus=[];
 
@@ -65,7 +113,7 @@ P.PI2=Math.PI/2;
 P.PI4=Math.PI/4;
 P.PI8=Math.PI/8;
 
-// used to cause rad values to wrap after 2*PI
+// used to cause rad values to wrap after +-2*PI
 P.wrapRad=function(r){
   if (r>=P.TWO_PI) {
     r-=P.TWO_PI;
@@ -116,34 +164,27 @@ P.prototype={
     this.menus.push(menu);
     return menu;
   },  
-  initRenderer:function(hex,options){
-    var o={
-      antialias:false,
-      shadowMapEnabled:false,
-      shadowMapSoft:false,
-      preserveDrawingBuffer:false // allow screenshot
-    };
-    $.extend(o,options);
+  initRenderer:function(options){
+    var o = $.extend(true,{},this.options.renderer,options);
     var renderer = new THREE.WebGLRenderer(o);
 //    renderer.shadowMapEnabled = o.shadowMapEnabled;
 //    renderer.shadowMapSoft = o.shadowMapSoft;
-    renderer.setClearColorHex( hex, 1 );
-    
+//    renderer.setClearColorHex(this.options.renderer.clearColor);    
     this.renderer=renderer;    
     $("#render-container").append( this.renderer.domElement );      
     this.onWindowResize();
   },
-  addStats:function(dom){
-    dom=dom||$("<div></div>");
+  addStats:function(options){
+    var o=$.extend(true,{},this.options.stats,options);
     stats = new Stats();
-    stats.domElement.style.position = 'absolute';
-    stats.domElement.style.bottom	= '1px';
+    $(stats.domElement).css(o.domElement.style);
     this.stats=stats;
-    $(dom).append( stats.domElement );
+    $(o.dom).append( stats.domElement );
     return stats;
   },
-  addAmbientLight:function(hex){
-    var light = new THREE.AmbientLight( hex==undefined ? 0x555555 : hex );
+  addAmbientLight:function(options){
+    var o = $.extend(true,{},this.options.ambientLight,options);
+    var light = new THREE.AmbientLight( o.color );
     this.scene.add( light );
     this.lights.push(light);    
     return light;  
@@ -164,16 +205,11 @@ P.prototype={
     lensFlare.position = light.position;
     return lensFlare;  
   },
-  addPointLight:function( hex, pos, flare ) {
-    var o={
-      intensity:1,
-      distance:0,
-      flare:false
-    };
-    $.extend(o,options);
+  addPointLight:function( options ) {
+    var o = $.extend(true,{},this.options.pointLight,options);
   
-    var light = new THREE.PointLight( hex==undefined ? 0xffffff : hex, o.intensity, o.distance );
-    light.position.set( pos.x, pos.y, pos.z );
+    var light = new THREE.PointLight( o.color, o.intensity, o.distance );
+    light.position.set( o.pos.x, o.pos.y, o.pos.z );
     this.scene.add( light );
     
     if (o.flare){
@@ -192,14 +228,11 @@ P.prototype={
     this.lights.push(light);
     return light;
   },
-  addDirectionalLight:function( hex, dir, options) {
-    var o={
-      intensity:1
-    }
-    $.extend(o,options);
+  addDirectionalLight:function(options) {
+    var o = $.extend(true,this.options.directinalLight,options);
     
-    var light = new THREE.DirectionalLight( hex==undefined ? 0xffffff : hex, o.intensity );
-    light.position.set( dir.x, dir.y, dir.z );
+    var light = new THREE.DirectionalLight( o.color, o.intensity );
+    light.position.set( o.dir.x, o.dir.y, o.dir.z );
     this.scene.add( light );
 
     if (this.options.helpers){
@@ -209,28 +242,18 @@ P.prototype={
     this.lights.push(light);    
     return light;
   },
-  addSpotLight:function(hex, pos, tar, options ) {
-    var o={
-      intensity:1,
-      distance:0,
-      angle:P.PI2,
-      exponent:10,
-      flare:false,
-      shadow:false,
-      shadowMapWidth:1024,
-      shadowMapHeight:1024
-    }
-    $.extend(o,options);
+  addSpotLight:function(options) {
+    var o = $.extend(true,{},this.options.spotLight,options);
 
     var light = new THREE.SpotLight( 
-      hex==undefined ? 0xffffff : hex, 
+      o.color,
       o.intensity, 
       o.distance, 
       o.angle, 
       o.exponent
     );
-    light.position.set( pos.x, pos.y, pos.z );
-    light.target.position.set(tar.x, tar.y, tar.z);    
+    light.position.set( o.pos.x, o.pos.y, o.pos.z );
+    light.target.position.set(o.target.x, o.target.y, o.target.z);    
     this.scene.add( light );    
     if (o.shadow){
       light.castShadow = true;
