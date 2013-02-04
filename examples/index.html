@@ -98,6 +98,9 @@ $(document).ready(function() {
      })
     );
     cube.castShadow=true;
+    cube.onUpdate=function(delta){
+      this.rotation.y += delta;    
+    };
     scene.add( cube );
 
     scene.add( genFloor() );
@@ -169,7 +172,7 @@ $(document).ready(function() {
   function update(){
     var delta = p.clock.getDelta();
     p.update(delta);
-    cube.rotation.y += delta;
+    
     if (par) par.render();    
     if (p.renderer) p.renderer.render( p.scene, p.camera );
     

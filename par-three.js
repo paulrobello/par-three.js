@@ -318,6 +318,12 @@ P.prototype={
   update:function(delta){
     this.updateControls(delta);
     if (this.stats) this.stats.update();
+    var o = this.objects;
+    var i = o.length;
+    while (i--){
+      var ob=o[i];
+      if (ob.onUpdate) ob.onUpdate(delta);
+    }
   },
   // update control object based on delta time
   updateControls:function(delta){
