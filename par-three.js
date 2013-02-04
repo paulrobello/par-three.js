@@ -8,11 +8,10 @@ self.console = self.console || {
 };
 
 var P=function(options){
-  options=options||{};
   this.options={
     helpers:false,
     
-    camera:{fov:60,near:0.1,far:1000},
+    camera:{fov:60,near:1,far:1000},
     fog:{type:'FogExp2',color:0x000000,density:0.005},
     
     ambientLight:{color:0x555555},
@@ -33,11 +32,12 @@ var P=function(options){
       intensity:1,
       distance:0,
       angle:P.PI2,
-      exponent:10,
+      exponent:50,
       pos:{x:5,y:5,z:5},
       target:{x:0,y:0,z:0},
       flare:false,
       shadow:false,
+      shadowDarkness:0.5,
       shadowMapWidth:1024,
       shadowMapHeight:1024
     },
@@ -48,7 +48,7 @@ var P=function(options){
       antialias:false,
       shadowMapEnabled:false,
       shadowMapSoft:false,
-      preserveDrawingBuffer:false // allow screenshot      
+      preserveDrawingBuffer:false // true to allow screenshot      
     },
     stats:{
       dom:"<div></div>",
@@ -67,8 +67,6 @@ var P=function(options){
   this.clock = new THREE.Clock();  
   // used to hold lense flare textures
   this.textureFlare=[];
-  // holds all lights
-  this.lights=[];
   // holds all scenes
   this.scenes=[];
   // holds all cameras
@@ -80,6 +78,9 @@ var P=function(options){
 
   // main scene
   this.scene=this.addScene(this.options)
+  this.lights=this.scene.__lights;
+  this.objects=this.scene.__objects;
+  
   // main camera
   this.camera=this.addCamera(this.options);
   // main menu
@@ -90,6 +91,11 @@ var P=function(options){
   
   window.addEventListener( 'resize', this.onWindowResize.bind(this), false );
 };
+
+// diffrent map types used by the loadTex function
+P.maps=['map','normalMap','specularMap','bumpMap'];
+
+// static helper function for loading 1 or more textures in a set
 P.loadTex=function(options){  
   $.each(P.maps,function(i,map){
     if (options[map]){
@@ -104,8 +110,6 @@ P.loadTex=function(options){
   return options;
 };
 
-// diffrent map types used by the loadTex function
-P.maps=['map','normalMap','specularMap','bumpMap'];
 
 // math helpers
 P.TWO_PI=Math.PI*2;
@@ -124,6 +128,7 @@ P.wrapRad=function(r){
 };
 
 P.prototype={
+  // correct aspect ratio and projection matrix when window size changes
   onWindowResize:function() {
     if (this.camera){
       this.camera.aspect = window.innerWidth / window.innerHeight;
@@ -166,10 +171,7 @@ P.prototype={
   },  
   initRenderer:function(options){
     var o = $.extend(true,{},this.options.renderer,options);
-    var renderer = new THREE.WebGLRenderer(o);
-//    renderer.shadowMapEnabled = o.shadowMapEnabled;
-//    renderer.shadowMapSoft = o.shadowMapSoft;
-//    renderer.setClearColorHex(this.options.renderer.clearColor);    
+    var renderer = $.extend(new THREE.WebGLRenderer(o),o);
     this.renderer=renderer;    
     $("#render-container").append( this.renderer.domElement );      
     this.onWindowResize();
@@ -182,13 +184,7 @@ P.prototype={
     $(o.dom).append( stats.domElement );
     return stats;
   },
-  addAmbientLight:function(options){
-    var o = $.extend(true,{},this.options.ambientLight,options);
-    var light = new THREE.AmbientLight( o.color );
-    this.scene.add( light );
-    this.lights.push(light);    
-    return light;  
-  },  
+  // used by positional lights to generate lense flare if enabled
   buildFlare:function(light,flareColor){
     var lensFlare = new THREE.LensFlare( this.textureFlare[0], 700, 0.0, THREE.AdditiveBlending, flareColor );
 
@@ -204,7 +200,13 @@ P.prototype={
     lensFlare.customUpdateCallback = this.lensFlareUpdateCallback;
     lensFlare.position = light.position;
     return lensFlare;  
-  },
+  },  
+  addAmbientLight:function(options){
+    var o = $.extend(true,{},this.options.ambientLight,options);
+    var light = new THREE.AmbientLight( o.color );
+    this.scene.add( light );
+    return light;  
+  },  
   addPointLight:function( options ) {
     var o = $.extend(true,{},this.options.pointLight,options);
   
@@ -225,7 +227,6 @@ P.prototype={
       var helper = new THREE.PointLightHelper(light,0.1);
       this.scene.add(sp_helper);    
     }
-    this.lights.push(light);
     return light;
   },
   addDirectionalLight:function(options) {
@@ -239,7 +240,6 @@ P.prototype={
       var helper = new THREE.DirectionalLightHelper(light,0.1);
       this.scene.add(sp_helper);                
     }
-    this.lights.push(light);    
     return light;
   },
   addSpotLight:function(options) {
@@ -257,7 +257,7 @@ P.prototype={
     this.scene.add( light );    
     if (o.shadow){
       light.castShadow = true;
-      light.shadowDarkness = 0.5;
+      light.shadowDarkness = o.shadowDarkness;
       if (this.options.helpers) light.shadowCameraVisible = true;
       light.shadowMapWidth = o.shadowMapWidth; 
       light.shadowMapHeight = o.shadowMapHeight;  
@@ -284,7 +284,6 @@ P.prototype={
       var helper = new THREE.SpotLightHelper(light,0.1);
       this.scene.add(helper);
     }
-    this.lights.push(light);    
     return light;
   },
   // used to update flare layout if camera / light moves
@@ -316,9 +315,15 @@ P.prototype={
     this.scene.add(controls.getObject());
     return controls;
   },
-  updateControls:function(delta){
-    if (this.controls) this.controls.update(delta); // Move dummy  
+  update:function(delta){
+    this.updateControls(delta);
+    if (this.stats) this.stats.update();
   },
+  // update control object based on delta time
+  updateControls:function(delta){
+    if (this.controls) this.controls.update(delta); 
+  },
+  // used to capture pointer if browser supports it and user allows it
   setupPointerLock:function(element) {
     var self = this
     element = element || document.body
@@ -338,16 +343,21 @@ P.prototype={
       console.error('pointerlock error');
     });
   },
+  // todo
+  intersectAllMeshes:function(start, direction, maxDistance){
+    return [];
+  },
   raycast:function(maxDistance) {
     var start = this.controls.getObject().position.clone();
     var direction = this.camera.matrixWorld.multiplyVector3(new THREE.Vector3(0,0,-1));
-    //var intersects = this.intersectAllMeshes(start, direction, maxDistance);
+    var intersects = this.intersectAllMeshes(start, direction, maxDistance);
     return intersects;
   },
   requestPointerLock:function(element) {
     if (!this.pointer) this.setupPointerLock(element);
     this.pointer.request();
   },
+  // todo
   notCapable:function() {
     if( !Detector().webgl ) {
       var wrapper = document.createElement('div');
@@ -365,7 +375,7 @@ P.prototype={
 };
 
 
-// functions below are ready
+// functions below are not ready
 function getDir(obj){
   var pLocal = new THREE.Vector3( 0, 0, -1 );
   //Now transform that point into world space:

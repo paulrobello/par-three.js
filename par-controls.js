@@ -1,16 +1,16 @@
 P.Controls = function ( options ) {
-  options=options||{camera:null,speed:10};
-  options.speed=options.speed||10;
-  options.invertY=true;
-  options.invertY = options.invertY ? -1 : 1;
-  options.enabled=options.enabled==undefined ? true : options.enabled;
-  options.showControls=options.showControls || true;
-  this.options=options;
+  this.options={
+    speed:10,
+    invertY:true,
+    camera:null,    
+    enabled:true,
+    showControls:true,
+    limitLook:true,
+    lookLimit: P.PI4
+  };
+  $.extend(this.options,options);
+  this.options.invertY = this.options.invertY ? -1 : 1;
   
-  this.enabled = options.enabled;    
-  
-//  this.gamepad = new P.Gamepad(options);
-
   this.pitchObject = new THREE.Object3D();
   this.pitchObject.add( options.camera );
 
@@ -19,53 +19,49 @@ P.Controls = function ( options ) {
 
   this.velocity = new THREE.Vector3(0,0,0);
 
-  this.limit = Math.PI / 4;
-
   this.mouseDown=false;
 
-  
+  this.names = [
+    'leftStick',
+    'rightStick',
+    'faceButton0',
+    'faceButton1',
+    'faceButton2',
+    'faceButton3',
+    'leftShoulder0',
+    'rightShoulder0',
+    'leftShoulder1',
+    'rightShoulder1',
+    'select',
+    'start',
+    'leftStickButton',
+    'rightStickButton',
+    'dpadUp',
+    'dpadDown',
+    'dpadLeft',
+    'dpadRight'
+  ];
 
- this.names = [
-            'leftStick',
-            'rightStick',
-            'faceButton0',
-            'faceButton1',
-            'faceButton2',
-            'faceButton3',
-            'leftShoulder0',
-            'rightShoulder0',
-            'leftShoulder1',
-            'rightShoulder1',
-            'select',
-            'start',
-            'leftStickButton',
-            'rightStickButton',
-            'dpadUp',
-            'dpadDown',
-            'dpadLeft',
-            'dpadRight'
-        ];
-
- this.names_xbox = {
-            'leftStick':'LeftStick',
-            'rightStick':'RightStick',
-            'faceButton0':'A',
-            'faceButton1':'B',
-            'faceButton2':'X',
-            'faceButton3':'Y',
-            'leftShoulder0':'LeftShoulder',
-            'rightShoulder0':'RightShoulder',
-            'leftShoulder1':'LeftTrigger',
-            'rightShoulder1':'RightTrigger',
-            'select':'Select',
-            'start':'Start',
-            'leftStickButton':'LeftStickButton',
-            'rightStickButton':'RightStickButton',
-            'dpadUp':'DPadUp',
-            'dpadDown':'DPadDown',
-            'dpadLeft':'DPadLeft',
-            'dpadRight':'DPadRight'
-        };
+  this.names_xbox = {
+    'leftStick':'LeftStick',
+    'rightStick':'RightStick',
+    'faceButton0':'A',
+    'faceButton1':'B',
+    'faceButton2':'X',
+    'faceButton3':'Y',
+    'leftShoulder0':'LeftShoulder',
+    'rightShoulder0':'RightShoulder',
+    'leftShoulder1':'LeftTrigger',
+    'rightShoulder1':'RightTrigger',
+    'select':'Select',
+    'start':'Start',
+    'leftStickButton':'LeftStickButton',
+    'rightStickButton':'RightStickButton',
+    'dpadUp':'DPadUp',
+    'dpadDown':'DPadDown',
+    'dpadLeft':'DPadLeft',
+    'dpadRight':'DPadRight'
+  };
   
   document.addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
   document.addEventListener( 'mousedown', this.onMouseDown.bind(this), false );
@@ -77,7 +73,7 @@ P.Controls = function ( options ) {
 
 P.Controls.prototype={  
   onMouseMove:function ( event ) {
-    if ( this.enabled === false || !this.mouseDown) return;
+    if ( this.options.enabled === false || !this.mouseDown) return;
     var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
     var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
@@ -87,11 +83,11 @@ P.Controls.prototype={
     
   },
   onMouseDown:function ( event ) {
-    if ( this.enabled === false ) return;
+    if ( this.options.enabled === false ) return;
     this.mouseDown=true;
   },
   onMouseUp:function ( event ) {
-    if ( this.enabled === false ) return;
+    if ( this.options.enabled === false ) return;
     this.mouseDown=false;
   },
   onKeyDown:function ( event ) {
@@ -177,10 +173,10 @@ P.Controls.prototype={
       }
     }
   },
-  limitLook: function (){
-    this.pitchObject.rotation.x = Math.max( -this.limit, Math.min( this.limit, this.pitchObject.rotation.x ) );  
+  limitLook: function(){
+    if (this.options.limitLook) this.pitchObject.rotation.x = Math.max( -this.options.lookLimit, Math.min( this.options.lookLimit, this.pitchObject.rotation.x ) );  
   },
-  getObject: function () {
+  getObject: function() {
     return this.yawObject;
   },
   getPad: function(num){
@@ -197,67 +193,65 @@ P.Controls.prototype={
     });
   },
   update: function ( delta ) {
-    if ( this.enabled === false ) return;
+    if ( this.options.enabled === false ) return;
     delta *= this.options.speed;
 
     if (this.velocity.x) this.yawObject.translateX( this.velocity.x * delta);
     if (this.velocity.y) this.yawObject.translateY( this.velocity.y * delta); 
     if (this.velocity.z) this.yawObject.translateZ( this.velocity.z * delta);
 
-      var pad = this.getPad(0);
-      
-      var i = 0;
-      if (pad) {
-        
-        if (this.options.showControls){
-          document.getElementById('pad' + i).style.display = '';
-          document.getElementById('pad' + i + '_title').innerHTML = pad.name;
-          for (var j = 0; j < this.names.length; ++j) {
-            var name = this.names[j];
-            var buttonDom = document.getElementById('pad' + i + '_' + this.names[j]);
-            buttonDom.src = pad.images[name];
-            if (j >= 2) buttonDom.style.opacity = pad[name] / 0.8 + 0.2;
-          }
-          var leftStick = document.getElementById('pad' + i + '_leftStick');
-          var rightStick = document.getElementById('pad' + i + '_rightStick');
-          var imgSize = 32;
-          leftStick.style.left = Math.floor((pad.leftStickX + 1.0) / 2.0 * 256 - imgSize) + 'px';
-          leftStick.style.top = Math.floor((pad.leftStickY + 1.0) / 2.0 * 256 - imgSize) + 'px';
-          rightStick.style.left = Math.floor((pad.rightStickX + 1.0) / 2.0 * 256 - imgSize) + 'px';
-          rightStick.style.top = Math.floor((pad.rightStickY + 1.0) / 2.0 * 256 - imgSize) + 'px';
+    var pad = this.getPad(0);
+    
+    var i = 0;
+    if (pad) {      
+      if (this.options.showControls){
+        document.getElementById('pad' + i).style.display = '';
+        document.getElementById('pad' + i + '_title').innerHTML = pad.name;
+        for (var j = 0; j < this.names.length; ++j) {
+          var name = this.names[j];
+          var buttonDom = document.getElementById('pad' + i + '_' + this.names[j]);
+          buttonDom.src = pad.images[name];
+          if (j >= 2) buttonDom.style.opacity = pad[name] / 0.8 + 0.2;
         }
-        
-        if (Math.abs(pad.rightStickY)>0.25) this.pitchObject.rotation.x+=pad.rightStickY*delta*0.25*this.options.invertY;
-        if (Math.abs(pad.rightStickX)>0.25) this.yawObject.rotation.y+=pad.rightStickX*delta*-0.25;
-        this.limitLook();    
-         
-        if (Math.abs(pad.leftStickY)>0.25) this.yawObject.translateZ(pad.leftStickY*delta*this.options.speed*0.1);
-        if (Math.abs(pad.leftStickX)>0.25) this.yawObject.translateX(pad.leftStickX*delta*this.options.speed*0.1);
+        var leftStick = document.getElementById('pad' + i + '_leftStick');
+        var rightStick = document.getElementById('pad' + i + '_rightStick');
+        var imgSize = 32;
+        leftStick.style.left = Math.floor((pad.leftStickX + 1.0) / 2.0 * 256 - imgSize) + 'px';
+        leftStick.style.top = Math.floor((pad.leftStickY + 1.0) / 2.0 * 256 - imgSize) + 'px';
+        rightStick.style.left = Math.floor((pad.rightStickX + 1.0) / 2.0 * 256 - imgSize) + 'px';
+        rightStick.style.top = Math.floor((pad.rightStickY + 1.0) / 2.0 * 256 - imgSize) + 'px';
+      }
+      
+      if (Math.abs(pad.rightStickY)>0.25) this.pitchObject.rotation.x+=pad.rightStickY*delta*0.25*this.options.invertY;
+      if (Math.abs(pad.rightStickX)>0.25) this.yawObject.rotation.y+=pad.rightStickX*delta*-0.25;
+      this.limitLook();    
+       
+      if (Math.abs(pad.leftStickY)>0.25) this.yawObject.translateZ(pad.leftStickY*delta*this.options.speed*0.1);
+      if (Math.abs(pad.leftStickX)>0.25) this.yawObject.translateX(pad.leftStickX*delta*this.options.speed*0.1);
 
-        if (Math.abs(pad.leftShoulder1)>0.25) this.yawObject.translateY(pad.leftShoulder1*delta*this.options.speed*-0.1);
-        if (Math.abs(pad.rightShoulder1)>0.25) this.yawObject.translateY(pad.rightShoulder1*delta*this.options.speed*0.1);
-        
-        
-        var pad_old=this.pad_old;
-        if (pad_old){
-          for (var j = 0; j < this.names.length; ++j) {
-            var name = this.names[j];
-            if (name!="start" && name!="select" && name.indexOf("Button")<0 && name.indexOf("Shoulder0")<0) continue;
-            if (pad[name]!=pad_old[name]){
-              data={
-                name_org:name,
-                name_maped:this.names_xbox[name],
-                state:pad[name]>0.25 ? 'down' : 'up',
-                value:pad[name]
-              };
-              $( document ).trigger( 'button', data );
-            }
+      if (Math.abs(pad.leftShoulder1)>0.25) this.yawObject.translateY(pad.leftShoulder1*delta*this.options.speed*-0.1);
+      if (Math.abs(pad.rightShoulder1)>0.25) this.yawObject.translateY(pad.rightShoulder1*delta*this.options.speed*0.1);
+      
+      
+      var pad_old=this.pad_old;
+      if (pad_old){
+        for (var j = 0; j < this.names.length; ++j) {
+          var name = this.names[j];
+          if (name!="start" && name!="select" && name.indexOf("Button")<0 && name.indexOf("Shoulder0")<0) continue;
+          if (pad[name]!=pad_old[name]){
+            data={
+              name_org:name,
+              name_maped:this.names_xbox[name],
+              state:pad[name]>0.25 ? 'down' : 'up',
+              value:pad[name]
+            };
+            $( document ).trigger( 'button', data );
           }
         }
-        this.pad_old= jQuery.extend({}, pad);
-      } else {
-        document.getElementById('pad' + i).style.display = 'none';
-      }            
-      
+      }
+      this.pad_old= jQuery.extend({}, pad);
+    } else {
+      document.getElementById('pad' + i).style.display = 'none';
+    }                  
   }
 };

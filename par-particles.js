@@ -1,52 +1,35 @@
 P.ParTicles = function(options){
-  options=options || {};
-  options.ps=this;
-  options.particlesLength=options.particlesLength || 1000;
-  options.size=options.size || 0.25;
-  options.palette_name=options.palette_name||'fire';
+  this.options={
+    ps:this,
+    particlesLength:1000,
+    size:0.25,
+    palette_name:'fire',
+    pointSprite:{
+      show:false,
+      color:{r:255,g:255,b:255}
+    }    
+  };
   
-  this._options=options;
+  options=$.extend(true,this.options,options);
+  
   this._pool = {
-      __pools: [],
-      // Get a new Vector
-      get: function() {
-        if ( this.__pools.length > 0 ) {
-          return this.__pools.pop();
-        }
-        console.log( "pool ran out!" )
-        return null;
-      },
-      // Release a vector back into the pool
-      add: function( v ) {
-        this.__pools.push( v );
+    __pools: [],
+    // Get a new Vector
+    get: function() {
+      if ( this.__pools.length > 0 ) {
+        return this.__pools.pop();
       }
+      console.log( "pool ran out!" )
+      return null;
+    },
+    // Release a vector back into the pool
+    add: function( v ) {
+      this.__pools.push( v );
+    }
   };
   
-  this.palettes={
-      white:[
-      new THREE.Color(0xffffff)
-      ],
-      fire:[
-      new THREE.Color(0x860200),
-      new THREE.Color(0xcc2200),
-      new THREE.Color(0xe24800),
-      new THREE.Color(0xff7701),
-      new THREE.Color(0xff9c00),
-      new THREE.Color(0xffcd2e),
-      new THREE.Color(0x000000)
-    ],
-    water:[
-      new THREE.Color(0x05273f),
-      new THREE.Color(0x053c55),
-      new THREE.Color(0x026493),
-      new THREE.Color(0x3f9899),
-      new THREE.Color(0x74cdc1),
-      new THREE.Color(0x999999),
-      new THREE.Color(0x000000)
-    ],        
-  };
   this.palette_name=options.palette_name;
-  this._colors=options.colors || this.palettes[options.palette_name];
+  this._colors=this.options.colors || P.ParTicles.palettes[options.palette_name];
   this.size=options.size;
   
   this._particles = new THREE.Geometry();
@@ -61,8 +44,8 @@ P.ParTicles = function(options){
   }
 
   if (!options.sprite_url){
-    var canvas  = this.generatePointSprite(255,255,255);
-    if (options.showPointSprite) $(options.showPointSprite).append(canvas);
+    var canvas  = this.generatePointSprite(options);
+    if (options.pointSprite.show) $(options.pointSprite.show).append(canvas);
     this._texture = new THREE.Texture( canvas );
   }else{
     this._texture=THREE.ImageUtils.loadTexture(options.sprite_url);
@@ -94,11 +77,35 @@ P.ParTicles = function(options){
   this.initSparks(options);
 }
 
+P.ParTicles.palettes={
+  white:[
+    new THREE.Color(0xffffff)
+  ],
+  fire:[
+    new THREE.Color(0x860200),
+    new THREE.Color(0xcc2200),
+    new THREE.Color(0xe24800),
+    new THREE.Color(0xff7701),
+    new THREE.Color(0xff9c00),
+    new THREE.Color(0xffcd2e),
+    new THREE.Color(0x000000)
+  ],
+  water:[
+    new THREE.Color(0x05273f),
+    new THREE.Color(0x053c55),
+    new THREE.Color(0x026493),
+    new THREE.Color(0x3f9899),
+    new THREE.Color(0x74cdc1),
+    new THREE.Color(0x999999),
+    new THREE.Color(0x000000)
+  ]
+};
+
 P.ParTicles.prototype={
 
   changePalette:function(name){
     this.palette_name=name||'fire';
-    this._colors=this.palettes[this.palette_name]||this.palettes[this.palette_name='fire'];
+    this._colors=P.ParTicles.palettes[this.palette_name]||P.ParTicles.palettes[this.palette_name='fire'];
   },
   initSparks:function(options){
     options=options || {};
@@ -138,20 +145,25 @@ P.ParTicles.prototype={
     
     return emitter;
   },
+  // each time a particle is created this gets called so the particle will have a pointer back to particle system
   initialize:function(emitter,particle){
     particle.ps=this;
   },
+  // starts particle system animation
   start:function(){
     this.emitter.start();
     return this;
   },
+  // stops particle system animation
   stop:function(){
     this.emitter.stop();
     return this;
   },
+  // returns true if particle system is running
   isRunning:function(){
     return this.emitter.isRunning();
   },
+  // toggle pause of particle system, still visible just not animated
   toggle:function(){
     if (this.isRunning()){
       this.stop();
@@ -160,19 +172,19 @@ P.ParTicles.prototype={
     }
     return this;
   },
-  generatePointSprite:function(r,g,b) {
-    r=r||255;
-    g=g||255;
-    b=b||255;
+  // generate a grey scale radial blended sprite for use as particle texture
+  generatePointSprite:function(options) {    
+    var o = $.extend(true,this.options.pointSprite,options);
+    $.extend(o,o.color);
+    
     var canvas = document.createElement( 'canvas' );
-
     canvas.width = 128;
-    canvas.height = 128;
+    canvas.height = canvas.width;
 
     var context = canvas.getContext( '2d' );
 
     context.beginPath();
-    context.arc( 64, 64, 60, 0, Math.PI * 2, false) ;
+    context.arc( canvas.width/2, canvas.height/2, canvas.width/2-4, 0, P.TWO_PI, false) ;
     context.closePath();
 
     context.lineWidth = 0.5;
@@ -181,25 +193,31 @@ P.ParTicles.prototype={
 
     var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
 
-    gradient.addColorStop( 0, 'rgba('+r+','+g+','+b+',1)' );
-    gradient.addColorStop( 0.2, 'rgba('+r+','+g+','+b+',1)' );
-    gradient.addColorStop( 0.4, 'rgba('+(r*0.8)+','+(g*0.8)+','+(b*0.8)+',1)' );
-    gradient.addColorStop( 1, 'rgba(0,0,0,1)' );
+    gradient.addColorStop( 0,   'rgba('+o.r+','+o.g+','+o.b+',1)' );
+    gradient.addColorStop( 0.2, 'rgba('+o.r+','+o.g+','+o.b+',1)' );
+    gradient.addColorStop( 0.4, 'rgba('+(o.r*0.8)+','+(o.g*0.8)+','+(o.b*0.8)+',1)' );
+    gradient.addColorStop( 1,   'rgba(0,0,0,1)' );
 
     context.fillStyle = gradient;
     context.fill();
 
     return canvas;
   },
-  render:function() {
+  // flag point sprits and colors as needing update
+  render:function(options) {
     this._cloud.geometry.verticesNeedUpdate = true;
     this._cloud.geometry.colorsNeedUpdate = true;
   },
-  setTarget:function() { // sparks js tags particles with this id which references our geometry point sprite
+  // sparks js tags particles with this id which references our geometry point sprite
+  setTarget:function() { 
     return this.target._pool.get();
   },
   onParticleCreated:function( particle ) { // sparks js event
-    particle.velocity.set((Math.random()-Math.random())*3,5+Math.random(),(Math.random()-Math.random())*3);
+    particle.velocity.set(
+      (Math.random()-Math.random())*3,
+      5+Math.random(),
+      (Math.random()-Math.random())*3
+    );
     var target = particle.target;
     if (target){
 //    console.log(target,particles.vertices[target]);
@@ -217,6 +235,7 @@ P.ParTicles.prototype={
       particle.ps._pool.add( particle.target );
     }
   },
+  // changes color of particle based on its age and current palette
   update:function (emitter, particle, time) { // sparks compatable action
     var target = particle.target; // used to update geometry
     var f=particle.age / particle.lifetime; // percentage through lifetime
