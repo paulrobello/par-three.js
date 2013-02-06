@@ -351,7 +351,12 @@ P.prototype={
   },
   // todo
   intersectAllMeshes:function(start, direction, maxDistance){
-    return [];
+    var hits=[]
+    $.each(this.objects,function(i,o){
+      if ( o.boundingSphere === null ) o.computeBoundingSphere();
+      
+    });
+    return hits;
   },
   raycast:function(maxDistance) {
     var start = this.controls.getObject().position.clone();

@@ -12,6 +12,17 @@ P.Menu.prototype={
   },
   click:function(){  
     this.menu_button.click();
+  },
+  menuItemClick:function(e){
+    var that=$(this).find("span");
+    var data={
+      name:'menuItemClick',      
+      e:e,
+      item:this,
+      label:that.text()||""      
+    };
+    $( document ).trigger( 'menuItemClick', data );
+    $(this).data('menu').click();
   }
 };
 
@@ -29,8 +40,7 @@ P.Menu.prototype={
       'menu_button' : this.children('.menu_button'),
       'menu':null
     };
-    $.extend(this.options, options);
-    var options=this.options
+    var options = $.extend(this.options, options);
     options.angle = parseInt(options.angle_difference)/(options.menu_element.length-1);
     options.menu.menu_button=options.menu_button;
 
@@ -44,16 +54,28 @@ P.Menu.prototype={
     };  
     var myClick=function(e){
       var that=$(this);
+      var data = {
+        name:'menuClick',
+        e:e,
+        menuButton:this,
+        menu:options.menu
+      };
+      $( document ).trigger( 'menuClick', data );      
       if(that.parent().hasClass('active')){
         setPosition(0);
 	that.parent().removeClass('active');
 	that.parent().addClass('inactive');
+	data.name='menuClose';
+	$( document ).trigger( 'menuClose', data );
       }else{
 	setPosition(1);
 	that.parent().addClass('active');
 	that.parent().removeClass('inactive');
+	data.name='menuOpen';
+	$( document ).trigger( 'menuOpen', data );
       }	
       that.toggleClass("btn-rotate");
+
     };
 
 	
@@ -61,8 +83,11 @@ P.Menu.prototype={
     $(options.menu_button).bind('click', myClick );
 
     return options.menu_element.each(function(i,ele){
+      var ele=$(ele);
+      ele.data('menu',options.menu);
+      ele.click(options.menu.menuItemClick);
       var icon=$(ele).attr("icon") || '';
-      var s=$(ele).find("span");
+      var s=ele.find("span");
       if (icon) s.css('background-image','url("'+icon+'")');
       ele_angle[i] = (parseInt(options.starting_angle) + options.angle*(i))*Math.PI/180;
       x_pos[i] = (options.radius * Math.sin(ele_angle[i]));

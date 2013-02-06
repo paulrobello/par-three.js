@@ -139,9 +139,21 @@ $(document).ready(function() {
         par.changePalette('fire');          
       }
     });
-    
+
     $( document ).bind( 'button', function (e, data) {
-      console.log( data);
+      console.log( data );
+    });        
+    $( document ).bind( 'menuItemClick', function (e, data) {
+      console.log( data );
+    });        
+    $( document ).bind( 'menuClick', function (e, data) {
+      console.log( data );
+    });        
+    $( document ).bind( 'menuClose', function (e, data) {
+      console.log( data );
+    });        
+    $( document ).bind( 'menuOpen', function (e, data) {
+      console.log( data );
     });        
   }
 
