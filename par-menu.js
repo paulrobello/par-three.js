@@ -21,7 +21,7 @@ P.Menu.prototype={
       item:this,
       label:that.text()||""      
     };
-    $( document ).trigger( 'menuItemClick', data );
+    $(this).trigger( 'menuItemClick', data );
     $(this).data('menu').click();
   }
 };
@@ -60,19 +60,19 @@ P.Menu.prototype={
         menuButton:this,
         menu:options.menu
       };
-      $( document ).trigger( 'menuClick', data );      
+      $( options.menu ).trigger( 'menuClick', data );      
       if(that.parent().hasClass('active')){
         setPosition(0);
 	that.parent().removeClass('active');
 	that.parent().addClass('inactive');
 	data.name='menuClose';
-	$( document ).trigger( 'menuClose', data );
+	$( options.menu ).trigger( 'menuClose', data );
       }else{
 	setPosition(1);
 	that.parent().addClass('active');
 	that.parent().removeClass('inactive');
 	data.name='menuOpen';
-	$( document ).trigger( 'menuOpen', data );
+	$( options.menu ).trigger( 'menuOpen', data );
       }	
       that.toggleClass("btn-rotate");
 

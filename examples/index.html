@@ -143,18 +143,37 @@ $(document).ready(function() {
     $( document ).bind( 'button', function (e, data) {
       console.log( data );
     });        
-    $( document ).bind( 'menuItemClick', function (e, data) {
+    $( p.menu ).bind( 'menuItemClick', function (e, data) {
       console.log( data );
     });        
-    $( document ).bind( 'menuClick', function (e, data) {
+    $( p.menu ).bind( 'menuClick', function (e, data) {
       console.log( data );
     });        
-    $( document ).bind( 'menuClose', function (e, data) {
+    $( p.menu ).bind( 'menuClose', function (e, data) {
       console.log( data );
     });        
-    $( document ).bind( 'menuOpen', function (e, data) {
+    $( p.menu ).bind( 'menuOpen', function (e, data) {
       console.log( data );
     });        
+  }
+
+  function genFloor2(){
+    var plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(50,50,50,50), 
+      new THREE.MeshBasicMaterial({ 
+	ambient		: 0xffffff,
+	color		: 0x00ff00,
+	shininess	: 255, 
+	specular	: 0xffffff,
+	side		: THREE.DoubleSide,
+	wireframe	: true,
+      })
+    );
+		
+    plane.position.y=-1.49;
+    plane.rotation.x=-90 * (Math.PI / 180);
+    
+    return plane;
   }
 
   function genFloor(){
