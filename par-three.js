@@ -219,7 +219,7 @@ P.prototype={
 
       var flareColor = new THREE.Color( 0xffffff );
       flareColor.copy( light.color );
-      THREE.ColorUtils.adjustHSV( flareColor, 0, -0.5, 0.5 );
+      flareColor.offsetHSL( 0, -0.5, 0.5 );
       this.scene.add( this.buildFlare(light,flareColor) );
     }
     
@@ -275,7 +275,7 @@ P.prototype={
     
       var flareColor = new THREE.Color( 0xffffff );
       flareColor.copy( light.color );
-      THREE.ColorUtils.adjustHSV( flareColor, 0, -0.5, 0.5 );
+      flareColor.offsetHSL( 0, -0.5, 0.5 );
 
       this.scene.add( this.buildFlare(light,flareColor) );
     }
