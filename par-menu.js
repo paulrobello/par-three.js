@@ -1,28 +1,38 @@
 P.Menu = function(options){
-  this.test(options);
+  this.init(options);
 };
 P.Menu.prototype={
-  test:function(){
-    this.element=$('#menu-container').PieMenu({
+  init:function(options){
+    this.element=$(options.element).PieMenu({
       'starting_angle':-45, //(Starting Angle in degree)
       'angle_difference' : 90, //(Displacement angle in degree)
       'radius':80, //(circle radius in px)
       'menu':this
     });   
   },
-  click:function(){  
-    this.menu_button.click();
+  click:function(e){  
+    this.menu_button.click(e);
   },
-  menuItemClick:function(e){
-    var that=$(this).find("span");
+  _menuItemClick:function(e){
+    var that=$(this);    
     var data={
       name:'menuItemClick',      
       e:e,
       item:this,
-      label:that.text()||""      
+      label:that.children("a").find("span").text()||""
     };
-    $(this).trigger( 'menuItemClick', data );
-    $(this).data('menu').click();
+    var menu=$(that.data('menu'));
+    menu.trigger( 'menuItemClick', data );
+    var sm=that.attr("submenu")||"";
+    sm=$(sm);
+    if (sm.length){    
+      menu.click();
+      sm.removeClass("hidden");
+      sm=sm.data("menu");
+      if (sm) sm.click();
+    }else{
+      menu.click();
+    }
   }
 };
 
@@ -77,7 +87,6 @@ P.Menu.prototype={
       that.toggleClass("btn-rotate");
 
     };
-
 	
     $(options.menu_button).unbind('click', myClick );
     $(options.menu_button).bind('click', myClick );
@@ -85,7 +94,10 @@ P.Menu.prototype={
     return options.menu_element.each(function(i,ele){
       var ele=$(ele);
       ele.data('menu',options.menu);
-      ele.click(options.menu.menuItemClick);
+      ele.unbind("click");
+      ele.click(function(e){
+        options.menu._menuItemClick.call(ele,e);
+      });
       var icon=$(ele).attr("icon") || '';
       var s=ele.find("span");
       if (icon) s.css('background-image','url("'+icon+'")');

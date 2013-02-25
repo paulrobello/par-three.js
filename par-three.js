@@ -165,9 +165,15 @@ P.prototype={
     return camera;
   },  
   addMenu:function(options){
-    var menu=new P.Menu(options);
-    this.menus.push(menu);
-    return menu;
+    var that=this;
+    $(".piemenu").each(function(){
+      options.element=this;
+      var menu=new P.Menu(options);
+      $(this).data("menu",menu);
+      that.menus.push(menu);
+    });
+    if (that.menus.length) return that.menus[that.menus.length-1];
+    return null;
   },  
   initRenderer:function(options){
     var o = $.extend(true,{},this.options.renderer,options);
