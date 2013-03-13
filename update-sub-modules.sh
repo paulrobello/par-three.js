@@ -9,14 +9,14 @@ fi
 echo BRANCH $BRANCH
 
 pushd js/gamepad.js
-git pull $BRANCH
+git pull
 popd
 pushd js/sparks.js
-git pull $BRANCH
+git pull
 popd
 pushd js/three.js
-git pull $BRANCH
+git pull
 popd
 pushd js/tween.js
-git pull $BRANCH
+git pull
 popd
