@@ -7,7 +7,7 @@ if [ "$BRANCH" == "" ] ; then
   BRANCH="master"
 fi
 echo BRANCH $BRANCH
-
+git pull
 pushd js/gamepad.js
 git pull
 popd
