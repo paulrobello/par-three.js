@@ -20,3 +20,9 @@ popd
 pushd js/tween.js
 git pull
 popd
+pushd js/buzz
+git pull
+popd
+pushd js/jquery.transit
+git pull
+popd
