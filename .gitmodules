@@ -10,3 +10,9 @@
 [submodule "js/tween.js"]
 	path = js/tween.js
 	url = https://github.com/sole/tween.js/
+[submodule "js/buzz"]
+	path = js/buzz
+	url = git://github.com/jaysalvat/buzz.git
+[submodule "js/jquery.transit"]
+	path = js/jquery.transit
+	url = git://github.com/rstacruz/jquery.transit.git
