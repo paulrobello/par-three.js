@@ -82,14 +82,14 @@ P.Menu.prototype={
 	that.parent().addClass('inactive');
 	data.name='menuClose';
 	$( options.menu ).trigger( 'menuClose', data );
-	p.sound.play(options.sounds.menuClose);	
+	p.sound.play(options.sounds.menu_close);	
       }else{
 	setPosition(1);
 	that.parent().addClass('active');
 	that.parent().removeClass('inactive');
 	data.name='menuOpen';
 	$( options.menu ).trigger( 'menuOpen', data );
-	p.sound.play(options.sounds.menuOpen);
+	p.sound.play(options.sounds.menu_open);
       }	
       that.toggleClass("btn-rotate");
 
