@@ -62,7 +62,7 @@ var P=function(options){
     sounds:{
       menu:{
         menu_open:"",
-        menu_close"",
+        menu_close:"",
         menu_click:"affirm_bass",        
         item_click:"affirm_blip"
       }
