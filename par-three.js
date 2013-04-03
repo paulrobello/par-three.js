@@ -58,7 +58,13 @@ var P=function(options){
           bottom:'0px'
         }
       }
-    }    
+    },
+    sounds:{
+      menu:{
+        menu_click:"affirm_bass",
+        item_click:"affirm_blip"
+      }
+    }
   };
   
   $.extend(true,this.options,options);
@@ -88,6 +94,8 @@ var P=function(options){
   
   this.renderer=null;
   this.stats=null;  
+  
+  this.sound=new P.Sound();
   
   window.addEventListener( 'resize', this.onWindowResize.bind(this), false );
 };
@@ -166,6 +174,7 @@ P.prototype={
   },  
   addMenu:function(options){
     var that=this;
+    
     $(".piemenu").each(function(){
       options.element=this;
       var menu=new P.Menu(options);

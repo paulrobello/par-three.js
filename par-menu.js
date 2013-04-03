@@ -2,13 +2,14 @@ P.Menu = function(options){
   this.init(options);
 };
 P.Menu.prototype={
-  init:function(options){
+  init:function(options){  
     this.element=$(options.element).PieMenu({
       'starting_angle':-45, //(Starting Angle in degree)
       'angle_difference' : 90, //(Displacement angle in degree)
       'radius':80, //(circle radius in px)
-      'menu':this
-    });   
+      'menu':this,
+      'sounds':options.sounds.menu
+    });
   },
   click:function(e){  
     this.menu_button.click(e);
@@ -21,7 +22,10 @@ P.Menu.prototype={
       item:this,
       label:that.children("a").find("span").text()||""
     };
-    var menu=$(that.data('menu'));
+    var options=that.data('options');
+    var menu=$(options.menu);
+    p.sound.play(options.sounds.item_click);
+    
     menu.trigger( 'menuItemClick', data );
     var sm=that.attr("submenu")||"";
     sm=$(sm);
@@ -70,6 +74,7 @@ P.Menu.prototype={
         menuButton:this,
         menu:options.menu
       };
+      p.sound.play(options.sounds.menu_click);
       $( options.menu ).trigger( 'menuClick', data );      
       if(that.parent().hasClass('active')){
         setPosition(0);
@@ -94,6 +99,7 @@ P.Menu.prototype={
     return options.menu_element.each(function(i,ele){
       var ele=$(ele);
       ele.data('menu',options.menu);
+      ele.data('options',options);
       ele.unbind("click");
       ele.click(function(e){
         options.menu._menuItemClick.call(ele,e);
