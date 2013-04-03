@@ -237,7 +237,9 @@ P.Controls.prototype={
       if (pad_old){
         for (var j = 0; j < this.names.length; ++j) {
           var name = this.names[j];
+                    console.log(name);
           if (name!="start" && name!="select" && name.indexOf("Button")<0 && name.indexOf("Shoulder0")<0 && name.indexOf("dpad")<0) continue;
+
           if (pad[name]!=pad_old[name]){
             data={
               name_org:name,
