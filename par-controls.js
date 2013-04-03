@@ -246,7 +246,7 @@ P.Controls.prototype={
               state:pad[name]>0.25 ? 'down' : 'up',
               value:pad[name]
             };
-            console.log(data);
+//            console.log(data);
             $( document ).trigger( 'button', data );
           }
         }
