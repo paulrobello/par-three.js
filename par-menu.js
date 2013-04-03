@@ -29,7 +29,7 @@ P.Menu.prototype={
     menu.trigger( 'menuItemClick', data );
     var sm=that.attr("submenu")||"";
     sm=$(sm);
-    if (sm.length){    
+    if (sm.length){
       menu.click();
       sm.removeClass("hidden");
       sm=sm.data("menu");
@@ -82,12 +82,14 @@ P.Menu.prototype={
 	that.parent().addClass('inactive');
 	data.name='menuClose';
 	$( options.menu ).trigger( 'menuClose', data );
+	p.sound.play(options.sounds.menuClose);	
       }else{
 	setPosition(1);
 	that.parent().addClass('active');
 	that.parent().removeClass('inactive');
 	data.name='menuOpen';
 	$( options.menu ).trigger( 'menuOpen', data );
+	p.sound.play(options.sounds.menuOpen);
       }	
       that.toggleClass("btn-rotate");
 
