@@ -239,7 +239,6 @@ P.Controls.prototype={
           var name = this.names[j];
 
           if (name!="start" && name!="select" && name.indexOf("Button")<0 && name.indexOf("Shoulder0")<0 && name.indexOf("dpad")<0) continue;
-          console.log(name);
           if (pad[name]!=pad_old[name]){
             data={
               name_org:name,
@@ -247,6 +246,7 @@ P.Controls.prototype={
               state:pad[name]>0.25 ? 'down' : 'up',
               value:pad[name]
             };
+            console.log(data);
             $( document ).trigger( 'button', data );
           }
         }
