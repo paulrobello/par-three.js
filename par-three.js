@@ -97,7 +97,10 @@ var P=function(options){
   this.renderer=null;
   this.stats=null;  
   
-  this.sound=new P.Sound();
+  this.sound=new P.Sound(this.options);
+  this.events=new P.Events(this.options);
+  window.evtMgr=this.events;
+  
   
   window.addEventListener( 'resize', this.onWindowResize.bind(this), false );
 };

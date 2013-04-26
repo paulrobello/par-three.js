@@ -8,7 +8,6 @@ P.Menu.prototype={
       'angle_difference' : 90, //(Displacement angle in degree)
       'radius':80, //(circle radius in px)
       'menu':this,
-      'sounds':options.sounds.menu
     });
   },
   click:function(e){  
@@ -24,9 +23,8 @@ P.Menu.prototype={
     };
     var options=that.data('options');
     var menu=$(options.menu);
-    p.sound.play(options.sounds.item_click);
     
-    menu.trigger( 'menuItemClick', data );
+    evtMgr.trigger( 'menuItemClick', data );
     var sm=that.attr("submenu")||"";
     sm=$(sm);
     if (sm.length){
@@ -74,22 +72,19 @@ P.Menu.prototype={
         menuButton:this,
         menu:options.menu
       };
-      p.sound.play(options.sounds.menu_click);
-      $( options.menu ).trigger( 'menuClick', data );      
+      evtMgr.trigger( 'menuClick', data );      
       if(that.parent().hasClass('active')){
         setPosition(0);
 	that.parent().removeClass('active');
 	that.parent().addClass('inactive');
 	data.name='menuClose';
-	$( options.menu ).trigger( 'menuClose', data );
-	p.sound.play(options.sounds.menu_close);	
+	evtMgr.trigger( 'menuClose', data );
       }else{
 	setPosition(1);
 	that.parent().addClass('active');
 	that.parent().removeClass('inactive');
 	data.name='menuOpen';
-	$( options.menu ).trigger( 'menuOpen', data );
-	p.sound.play(options.sounds.menu_open);
+	evtMgr.trigger( 'menuOpen', data );
       }	
       that.toggleClass("btn-rotate");
 
